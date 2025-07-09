@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(20, 14.3%, 4.1%);
+  --muted: hsl(60, 4.8%, 95.9%);
+  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(20, 14.3%, 4.1%);
+  --border: hsl(20, 5.9%, 90%);
+  --input: hsl(20, 5.9%, 90%);
+  --primary: hsl(258, 90%, 60%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(187, 95%, 43%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --accent: hsl(43, 96%, 56%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --success: hsl(142, 76%, 36%);
+  --success-foreground: hsl(0, 0%, 100%);
+  --warning: hsl(43, 96%, 56%);
+  --warning-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --ring: hsl(258, 90%, 60%);
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 3.9%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(258, 90%, 60%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(187, 95%, 43%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --accent: hsl(43, 96%, 56%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --success: hsl(142, 76%, 36%);
+  --success-foreground: hsl(0, 0%, 100%);
+  --warning: hsl(43, 96%, 56%);
+  --warning-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(258, 90%, 60%);
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .stats-card {
+    @apply bg-card rounded-xl shadow-sm border border-border p-6;
+  }
+  
+  .platform-icon {
+    @apply w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm;
+  }
+  
+  .platform-twitter {
+    @apply bg-blue-500;
+  }
+  
+  .platform-facebook {
+    @apply bg-blue-600;
+  }
+  
+  .platform-instagram {
+    @apply bg-gradient-to-br from-purple-500 to-pink-500;
+  }
+  
+  .platform-linkedin {
+    @apply bg-blue-700;
+  }
+  
+  .status-badge {
+    @apply px-2 py-1 text-xs rounded-full font-medium;
+  }
+  
+  .status-scheduled {
+    @apply bg-warning/20 text-warning;
+  }
+  
+  .status-published {
+    @apply bg-success/20 text-success;
+  }
+  
+  .status-draft {
+    @apply bg-gray-200 text-gray-700;
+  }
+  
+  .status-failed {
+    @apply bg-destructive/20 text-destructive;
+  }
+}

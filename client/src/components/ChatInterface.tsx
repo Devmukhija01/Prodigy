@@ -38,17 +38,22 @@ export const ChatInterface = () => {
 
   useEffect(() => {
     // Add new WebSocket messages to chat
+    if (!selectedFriend) return;
+    
     const newMessages = messages.filter(
       msg => 
-        selectedFriend && 
         ((msg.fromUserId === selectedFriend.id && msg.toUserId === CURRENT_USER_ID) ||
          (msg.fromUserId === CURRENT_USER_ID && msg.toUserId === selectedFriend.id))
     );
     
     if (newMessages.length > 0) {
-      setChatMessages(prev => [...prev, ...newMessages]);
+      setChatMessages(prev => {
+        const existingIds = new Set(prev.map(m => m.id));
+        const uniqueNewMessages = newMessages.filter(m => !existingIds.has(m.id));
+        return uniqueNewMessages.length > 0 ? [...prev, ...uniqueNewMessages] : prev;
+      });
     }
-  }, [messages, selectedFriend]);
+  }, [messages, selectedFriend?.id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

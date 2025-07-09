@@ -3,13 +3,17 @@ import { Header } from '@/components/Header';
 import { SearchUsers } from '@/components/SearchUsers';
 import { PendingRequests } from '@/components/PendingRequests';
 import { ChatInterface } from '@/components/ChatInterface';
+import { Dashboard } from '@/components/Dashboard';
+import { Posts } from '@/components/Posts';
+import { Templates } from '@/components/Templates';
+import { Brand } from '@/components/Brand';
 import { useQuery } from '@tanstack/react-query';
 import { useWebSocket } from '@/hooks/useWebSocket';
 
 const CURRENT_USER_ID = 1; // This would come from authentication context
 
 export default function Home() {
-  const [activeScreen, setActiveScreen] = useState<'search' | 'pending' | 'chat'>('search');
+  const [activeScreen, setActiveScreen] = useState<'search' | 'pending' | 'chat' | 'dashboard' | 'posts' | 'templates' | 'brand'>('dashboard');
   const { friendRequests } = useWebSocket(CURRENT_USER_ID);
 
   const { data: pendingRequests = [] } = useQuery({
@@ -20,6 +24,14 @@ export default function Home() {
 
   const renderActiveScreen = () => {
     switch (activeScreen) {
+      case 'dashboard':
+        return <Dashboard />;
+      case 'posts':
+        return <Posts />;
+      case 'templates':
+        return <Templates />;
+      case 'brand':
+        return <Brand />;
       case 'search':
         return <SearchUsers />;
       case 'pending':
@@ -27,7 +39,7 @@ export default function Home() {
       case 'chat':
         return <ChatInterface />;
       default:
-        return <SearchUsers />;
+        return <Dashboard />;
     }
   };
 

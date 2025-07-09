@@ -2,7 +2,15 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
-import { insertFriendRequestSchema, insertMessageSchema } from "@shared/schema";
+import { 
+  insertFriendRequestSchema, 
+  insertMessageSchema, 
+  insertPostSchema, 
+  insertTemplateSchema, 
+  insertBrandAssetSchema, 
+  insertScheduleSchema, 
+  insertTaskSchema 
+} from "@shared/schema";
 import { z } from "zod";
 
 interface WebSocketClient extends WebSocket {
@@ -242,6 +250,141 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json(user);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Social Media Management Routes
+
+  // Posts
+  app.post("/api/posts", async (req, res) => {
+    try {
+      const body = insertPostSchema.parse(req.body);
+      const post = await storage.createPost(body);
+      res.json(post);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid post data" });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/posts/user/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const posts = await storage.getPostsByUserId(userId);
+      res.json(posts);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/posts/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const post = await storage.getPostById(id);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      res.json(post);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Templates
+  app.post("/api/templates", async (req, res) => {
+    try {
+      const body = insertTemplateSchema.parse(req.body);
+      const template = await storage.createTemplate(body);
+      res.json(template);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid template data" });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/templates/user/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const templates = await storage.getTemplatesByUserId(userId);
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Brand Assets
+  app.post("/api/brand-assets", async (req, res) => {
+    try {
+      const body = insertBrandAssetSchema.parse(req.body);
+      const asset = await storage.createBrandAsset(body);
+      res.json(asset);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid brand asset data" });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/brand-assets/user/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const assets = await storage.getBrandAssetsByUserId(userId);
+      res.json(assets);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/brand-assets/user/:userId/type/:type", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const { type } = req.params;
+      const assets = await storage.getBrandAssetsByType(userId, type);
+      res.json(assets);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Tasks
+  app.post("/api/tasks", async (req, res) => {
+    try {
+      const body = insertTaskSchema.parse(req.body);
+      const task = await storage.createTask(body);
+      res.json(task);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid task data" });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/tasks/user/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const tasks = await storage.getTasksByUserId(userId);
+      res.json(tasks);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/tasks/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      await storage.updateTask(id, updates);
+      res.json({ message: "Task updated successfully" });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }

@@ -1,11 +1,11 @@
-import { Moon, Sun, Search, Clock, MessageCircle } from 'lucide-react';
+import { Moon, Sun, Search, Clock, MessageCircle, Calendar, FileText, Palette, BarChart3, Users, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useTheme } from './ThemeProvider';
 
 interface HeaderProps {
-  activeScreen: 'search' | 'pending' | 'chat';
-  onScreenChange: (screen: 'search' | 'pending' | 'chat') => void;
+  activeScreen: 'search' | 'pending' | 'chat' | 'dashboard' | 'posts' | 'templates' | 'brand';
+  onScreenChange: (screen: 'search' | 'pending' | 'chat' | 'dashboard' | 'posts' | 'templates' | 'brand') => void;
   pendingCount: number;
 }
 
@@ -29,23 +29,65 @@ export const Header = ({ activeScreen, onScreenChange, pendingCount }: HeaderPro
           </div>
 
           {/* Navigation Icons */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <Button
+              variant={activeScreen === 'dashboard' ? 'default' : 'ghost'}
+              onClick={() => onScreenChange('dashboard')}
+              className="flex items-center space-x-2"
+              size="sm"
+            >
+              <BarChart3 size={16} />
+              <span className="hidden lg:inline">Dashboard</span>
+            </Button>
+
+            <Button
+              variant={activeScreen === 'posts' ? 'default' : 'ghost'}
+              onClick={() => onScreenChange('posts')}
+              className="flex items-center space-x-2"
+              size="sm"
+            >
+              <Send size={16} />
+              <span className="hidden lg:inline">Posts</span>
+            </Button>
+
+            <Button
+              variant={activeScreen === 'templates' ? 'default' : 'ghost'}
+              onClick={() => onScreenChange('templates')}
+              className="flex items-center space-x-2"
+              size="sm"
+            >
+              <FileText size={16} />
+              <span className="hidden lg:inline">Templates</span>
+            </Button>
+
+            <Button
+              variant={activeScreen === 'brand' ? 'default' : 'ghost'}
+              onClick={() => onScreenChange('brand')}
+              className="flex items-center space-x-2"
+              size="sm"
+            >
+              <Palette size={16} />
+              <span className="hidden lg:inline">Brand</span>
+            </Button>
+            
             <Button
               variant={activeScreen === 'search' ? 'default' : 'ghost'}
               onClick={() => onScreenChange('search')}
               className="flex items-center space-x-2"
+              size="sm"
             >
-              <Search size={16} />
-              <span className="hidden sm:inline">Search Users</span>
+              <Users size={16} />
+              <span className="hidden lg:inline">Find Users</span>
             </Button>
             
             <Button
               variant={activeScreen === 'pending' ? 'default' : 'ghost'}
               onClick={() => onScreenChange('pending')}
               className="flex items-center space-x-2 relative"
+              size="sm"
             >
               <Clock size={16} />
-              <span className="hidden sm:inline">Pending</span>
+              <span className="hidden lg:inline">Requests</span>
               {pendingCount > 0 && (
                 <Badge className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground animate-pulse">
                   {pendingCount}
@@ -57,9 +99,10 @@ export const Header = ({ activeScreen, onScreenChange, pendingCount }: HeaderPro
               variant={activeScreen === 'chat' ? 'default' : 'ghost'}
               onClick={() => onScreenChange('chat')}
               className="flex items-center space-x-2"
+              size="sm"
             >
               <MessageCircle size={16} />
-              <span className="hidden sm:inline">Chats</span>
+              <span className="hidden lg:inline">Chats</span>
             </Button>
 
             {/* Dark Mode Toggle */}

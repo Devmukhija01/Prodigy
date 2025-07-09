@@ -2,46 +2,8 @@ import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// User Management
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  email: text("email").notNull().unique(),
-  fullName: text("full_name").notNull(),
-  avatar: text("avatar"),
-  isOnline: boolean("is_online").default(false),
-  lastSeen: timestamp("last_seen"),
-});
-
-// Social Chat Features
-export const friendRequests = pgTable("friend_requests", {
-  id: serial("id").primaryKey(),
-  fromUserId: integer("from_user_id").notNull(),
-  toUserId: integer("to_user_id").notNull(),
-  status: text("status").notNull().default("pending"), // pending, accepted, rejected
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const friendships = pgTable("friendships", {
-  id: serial("id").primaryKey(),
-  user1Id: integer("user1_id").notNull(),
-  user2Id: integer("user2_id").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const messages = pgTable("messages", {
-  id: serial("id").primaryKey(),
-  fromUserId: integer("from_user_id").notNull(),
-  toUserId: integer("to_user_id").notNull(),
-  content: text("content").notNull(),
-  timestamp: timestamp("timestamp").defaultNow(),
-  isRead: boolean("is_read").default(false),
-});
-
-// Social Media Management Features
 export const posts = pgTable("posts", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
   title: text("title").notNull(),
   content: text("content").notNull(),
   platforms: text("platforms").array().notNull(),
@@ -50,12 +12,10 @@ export const posts = pgTable("posts", {
   tags: text("tags").array(),
   mediaUrls: text("media_urls").array(),
   templateId: integer("template_id"),
-  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const templates = pgTable("templates", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
   name: text("name").notNull(),
   description: text("description"),
   content: text("content").notNull(),
@@ -63,17 +23,14 @@ export const templates = pgTable("templates", {
   brandColors: text("brand_colors").array(),
   brandFonts: text("brand_fonts").array(),
   isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const brandAssets = pgTable("brand_assets", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
   name: text("name").notNull(),
   type: text("type").notNull(), // 'logo', 'color', 'font'
   value: text("value").notNull(), // URL for assets, hex for colors, font name for fonts
   isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const schedules = pgTable("schedules", {
@@ -82,12 +39,10 @@ export const schedules = pgTable("schedules", {
   platform: text("platform").notNull(),
   scheduledDate: timestamp("scheduled_date").notNull(),
   status: text("status").notNull(), // 'pending', 'published', 'failed'
-  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const tasks = pgTable("tasks", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
   title: text("title").notNull(),
   description: text("description"),
   status: text("status").notNull().default("pending"), // 'pending', 'completed'
@@ -97,43 +52,20 @@ export const tasks = pgTable("tasks", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Insert Schemas
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  email: true,
-  fullName: true,
-  avatar: true,
-});
-
-export const insertFriendRequestSchema = createInsertSchema(friendRequests).pick({
-  fromUserId: true,
-  toUserId: true,
-});
-
-export const insertMessageSchema = createInsertSchema(messages).pick({
-  fromUserId: true,
-  toUserId: true,
-  content: true,
-});
-
 export const insertPostSchema = createInsertSchema(posts).omit({
   id: true,
-  createdAt: true,
 });
 
 export const insertTemplateSchema = createInsertSchema(templates).omit({
   id: true,
-  createdAt: true,
 });
 
 export const insertBrandAssetSchema = createInsertSchema(brandAssets).omit({
   id: true,
-  createdAt: true,
 });
 
 export const insertScheduleSchema = createInsertSchema(schedules).omit({
   id: true,
-  createdAt: true,
 });
 
 export const insertTaskSchema = createInsertSchema(tasks).omit({
@@ -142,14 +74,6 @@ export const insertTaskSchema = createInsertSchema(tasks).omit({
   updatedAt: true,
 });
 
-// Types
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
-export type InsertFriendRequest = z.infer<typeof insertFriendRequestSchema>;
-export type FriendRequest = typeof friendRequests.$inferSelect;
-export type Friendship = typeof friendships.$inferSelect;
-export type InsertMessage = z.infer<typeof insertMessageSchema>;
-export type Message = typeof messages.$inferSelect;
 export type Post = typeof posts.$inferSelect;
 export type InsertPost = z.infer<typeof insertPostSchema>;
 export type Template = typeof templates.$inferSelect;
@@ -160,3 +84,17 @@ export type Schedule = typeof schedules.$inferSelect;
 export type InsertSchedule = z.infer<typeof insertScheduleSchema>;
 export type Task = typeof tasks.$inferSelect;
 export type InsertTask = z.infer<typeof insertTaskSchema>;
+
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+});
+
+export const insertUserSchema = createInsertSchema(users).pick({
+  username: true,
+  password: true,
+});
+
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;

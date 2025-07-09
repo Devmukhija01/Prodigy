@@ -3,13 +3,28 @@ import {
   friendRequests, 
   friendships, 
   messages,
+  posts,
+  templates,
+  brandAssets,
+  schedules,
+  tasks,
   type User, 
   type InsertUser, 
   type FriendRequest, 
   type InsertFriendRequest, 
   type Friendship,
   type Message,
-  type InsertMessage
+  type InsertMessage,
+  type Post,
+  type InsertPost,
+  type Template,
+  type InsertTemplate,
+  type BrandAsset,
+  type InsertBrandAsset,
+  type Schedule,
+  type InsertSchedule,
+  type Task,
+  type InsertTask
 } from "@shared/schema";
 
 export interface IStorage {
@@ -37,6 +52,43 @@ export interface IStorage {
   getMessagesBetweenUsers(user1Id: number, user2Id: number): Promise<Message[]>;
   getLastMessageBetweenUsers(user1Id: number, user2Id: number): Promise<Message | undefined>;
   markMessagesAsRead(fromUserId: number, toUserId: number): Promise<void>;
+
+  // Social Media Post methods
+  createPost(post: InsertPost): Promise<Post>;
+  getPostById(id: number): Promise<Post | undefined>;
+  getPostsByUserId(userId: number): Promise<Post[]>;
+  updatePost(id: number, updates: Partial<Post>): Promise<void>;
+  deletePost(id: number): Promise<void>;
+  getPostsByStatus(status: string): Promise<Post[]>;
+
+  // Template methods
+  createTemplate(template: InsertTemplate): Promise<Template>;
+  getTemplateById(id: number): Promise<Template | undefined>;
+  getTemplatesByUserId(userId: number): Promise<Template[]>;
+  updateTemplate(id: number, updates: Partial<Template>): Promise<void>;
+  deleteTemplate(id: number): Promise<void>;
+
+  // Brand Asset methods
+  createBrandAsset(asset: InsertBrandAsset): Promise<BrandAsset>;
+  getBrandAssetById(id: number): Promise<BrandAsset | undefined>;
+  getBrandAssetsByUserId(userId: number): Promise<BrandAsset[]>;
+  getBrandAssetsByType(userId: number, type: string): Promise<BrandAsset[]>;
+  updateBrandAsset(id: number, updates: Partial<BrandAsset>): Promise<void>;
+  deleteBrandAsset(id: number): Promise<void>;
+
+  // Schedule methods
+  createSchedule(schedule: InsertSchedule): Promise<Schedule>;
+  getScheduleById(id: number): Promise<Schedule | undefined>;
+  getSchedulesByPostId(postId: number): Promise<Schedule[]>;
+  updateSchedule(id: number, updates: Partial<Schedule>): Promise<void>;
+  deleteSchedule(id: number): Promise<void>;
+
+  // Task methods
+  createTask(task: InsertTask): Promise<Task>;
+  getTaskById(id: number): Promise<Task | undefined>;
+  getTasksByUserId(userId: number): Promise<Task[]>;
+  updateTask(id: number, updates: Partial<Task>): Promise<void>;
+  deleteTask(id: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -44,22 +96,42 @@ export class MemStorage implements IStorage {
   private friendRequests: Map<number, FriendRequest>;
   private friendships: Map<number, Friendship>;
   private messages: Map<number, Message>;
+  private posts: Map<number, Post>;
+  private templates: Map<number, Template>;
+  private brandAssets: Map<number, BrandAsset>;
+  private schedules: Map<number, Schedule>;
+  private tasks: Map<number, Task>;
   private currentUserId: number;
   private currentFriendRequestId: number;
   private currentFriendshipId: number;
   private currentMessageId: number;
+  private currentPostId: number;
+  private currentTemplateId: number;
+  private currentBrandAssetId: number;
+  private currentScheduleId: number;
+  private currentTaskId: number;
 
   constructor() {
     this.users = new Map();
     this.friendRequests = new Map();
     this.friendships = new Map();
     this.messages = new Map();
+    this.posts = new Map();
+    this.templates = new Map();
+    this.brandAssets = new Map();
+    this.schedules = new Map();
+    this.tasks = new Map();
     this.currentUserId = 1;
     this.currentFriendRequestId = 1;
     this.currentFriendshipId = 1;
     this.currentMessageId = 1;
+    this.currentPostId = 1;
+    this.currentTemplateId = 1;
+    this.currentBrandAssetId = 1;
+    this.currentScheduleId = 1;
+    this.currentTaskId = 1;
 
-    // Initialize with some sample users
+    // Initialize with some sample data
     this.initializeSampleData();
   }
 
@@ -74,6 +146,35 @@ export class MemStorage implements IStorage {
     for (const userData of sampleUsers) {
       await this.createUser(userData);
     }
+
+    // Initialize sample templates
+    await this.createTemplate({
+      userId: 1,
+      name: "Social Media Announcement",
+      description: "Template for important announcements",
+      content: "🎉 Big news! {announcement}",
+      platforms: ["twitter", "facebook", "instagram"],
+      brandColors: ["#007bff", "#28a745"],
+      brandFonts: ["Arial", "Helvetica"],
+      isActive: true
+    });
+
+    // Initialize sample brand assets
+    await this.createBrandAsset({
+      userId: 1,
+      name: "Primary Brand Color",
+      type: "color",
+      value: "#007bff",
+      isActive: true
+    });
+
+    await this.createBrandAsset({
+      userId: 1,
+      name: "Company Logo",
+      type: "logo",
+      value: "/assets/logo.png",
+      isActive: true
+    });
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -89,6 +190,7 @@ export class MemStorage implements IStorage {
     const user: User = {
       ...insertUser,
       id,
+      avatar: insertUser.avatar || null,
       isOnline: false,
       lastSeen: null,
     };
@@ -210,7 +312,11 @@ export class MemStorage implements IStorage {
         (message.fromUserId === user1Id && message.toUserId === user2Id) ||
         (message.fromUserId === user2Id && message.toUserId === user1Id)
       )
-      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      .sort((a, b) => {
+        const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+        const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+        return timeA - timeB;
+      });
   }
 
   async getLastMessageBetweenUsers(user1Id: number, user2Id: number): Promise<Message | undefined> {
@@ -219,12 +325,194 @@ export class MemStorage implements IStorage {
   }
 
   async markMessagesAsRead(fromUserId: number, toUserId: number): Promise<void> {
-    for (const [id, message] of this.messages.entries()) {
+    for (const [id, message] of Array.from(this.messages.entries())) {
       if (message.fromUserId === fromUserId && message.toUserId === toUserId) {
         message.isRead = true;
         this.messages.set(id, message);
       }
     }
+  }
+
+  // Social Media Post methods
+  async createPost(insertPost: InsertPost): Promise<Post> {
+    const id = this.currentPostId++;
+    const post: Post = {
+      ...insertPost,
+      id,
+      scheduledDate: insertPost.scheduledDate || null,
+      tags: insertPost.tags || null,
+      mediaUrls: insertPost.mediaUrls || null,
+      templateId: insertPost.templateId || null,
+      createdAt: new Date(),
+    };
+    this.posts.set(id, post);
+    return post;
+  }
+
+  async getPostById(id: number): Promise<Post | undefined> {
+    return this.posts.get(id);
+  }
+
+  async getPostsByUserId(userId: number): Promise<Post[]> {
+    return Array.from(this.posts.values()).filter(post => post.userId === userId);
+  }
+
+  async updatePost(id: number, updates: Partial<Post>): Promise<void> {
+    const post = this.posts.get(id);
+    if (post) {
+      const updatedPost = { ...post, ...updates };
+      this.posts.set(id, updatedPost);
+    }
+  }
+
+  async deletePost(id: number): Promise<void> {
+    this.posts.delete(id);
+  }
+
+  async getPostsByStatus(status: string): Promise<Post[]> {
+    return Array.from(this.posts.values()).filter(post => post.status === status);
+  }
+
+  // Template methods
+  async createTemplate(insertTemplate: InsertTemplate): Promise<Template> {
+    const id = this.currentTemplateId++;
+    const template: Template = {
+      ...insertTemplate,
+      id,
+      description: insertTemplate.description || null,
+      brandColors: insertTemplate.brandColors || null,
+      brandFonts: insertTemplate.brandFonts || null,
+      isActive: insertTemplate.isActive !== undefined ? insertTemplate.isActive : true,
+      createdAt: new Date(),
+    };
+    this.templates.set(id, template);
+    return template;
+  }
+
+  async getTemplateById(id: number): Promise<Template | undefined> {
+    return this.templates.get(id);
+  }
+
+  async getTemplatesByUserId(userId: number): Promise<Template[]> {
+    return Array.from(this.templates.values()).filter(template => template.userId === userId);
+  }
+
+  async updateTemplate(id: number, updates: Partial<Template>): Promise<void> {
+    const template = this.templates.get(id);
+    if (template) {
+      const updatedTemplate = { ...template, ...updates };
+      this.templates.set(id, updatedTemplate);
+    }
+  }
+
+  async deleteTemplate(id: number): Promise<void> {
+    this.templates.delete(id);
+  }
+
+  // Brand Asset methods
+  async createBrandAsset(insertAsset: InsertBrandAsset): Promise<BrandAsset> {
+    const id = this.currentBrandAssetId++;
+    const asset: BrandAsset = {
+      ...insertAsset,
+      id,
+      isActive: insertAsset.isActive !== undefined ? insertAsset.isActive : true,
+      createdAt: new Date(),
+    };
+    this.brandAssets.set(id, asset);
+    return asset;
+  }
+
+  async getBrandAssetById(id: number): Promise<BrandAsset | undefined> {
+    return this.brandAssets.get(id);
+  }
+
+  async getBrandAssetsByUserId(userId: number): Promise<BrandAsset[]> {
+    return Array.from(this.brandAssets.values()).filter(asset => asset.userId === userId);
+  }
+
+  async getBrandAssetsByType(userId: number, type: string): Promise<BrandAsset[]> {
+    return Array.from(this.brandAssets.values()).filter(asset => asset.userId === userId && asset.type === type);
+  }
+
+  async updateBrandAsset(id: number, updates: Partial<BrandAsset>): Promise<void> {
+    const asset = this.brandAssets.get(id);
+    if (asset) {
+      const updatedAsset = { ...asset, ...updates };
+      this.brandAssets.set(id, updatedAsset);
+    }
+  }
+
+  async deleteBrandAsset(id: number): Promise<void> {
+    this.brandAssets.delete(id);
+  }
+
+  // Schedule methods
+  async createSchedule(insertSchedule: InsertSchedule): Promise<Schedule> {
+    const id = this.currentScheduleId++;
+    const schedule: Schedule = {
+      ...insertSchedule,
+      id,
+      createdAt: new Date(),
+    };
+    this.schedules.set(id, schedule);
+    return schedule;
+  }
+
+  async getScheduleById(id: number): Promise<Schedule | undefined> {
+    return this.schedules.get(id);
+  }
+
+  async getSchedulesByPostId(postId: number): Promise<Schedule[]> {
+    return Array.from(this.schedules.values()).filter(schedule => schedule.postId === postId);
+  }
+
+  async updateSchedule(id: number, updates: Partial<Schedule>): Promise<void> {
+    const schedule = this.schedules.get(id);
+    if (schedule) {
+      const updatedSchedule = { ...schedule, ...updates };
+      this.schedules.set(id, updatedSchedule);
+    }
+  }
+
+  async deleteSchedule(id: number): Promise<void> {
+    this.schedules.delete(id);
+  }
+
+  // Task methods
+  async createTask(insertTask: InsertTask): Promise<Task> {
+    const id = this.currentTaskId++;
+    const task: Task = {
+      ...insertTask,
+      id,
+      status: insertTask.status || "pending",
+      description: insertTask.description || null,
+      priority: insertTask.priority || "medium",
+      dueDate: insertTask.dueDate || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.tasks.set(id, task);
+    return task;
+  }
+
+  async getTaskById(id: number): Promise<Task | undefined> {
+    return this.tasks.get(id);
+  }
+
+  async getTasksByUserId(userId: number): Promise<Task[]> {
+    return Array.from(this.tasks.values()).filter(task => task.userId === userId);
+  }
+
+  async updateTask(id: number, updates: Partial<Task>): Promise<void> {
+    const task = this.tasks.get(id);
+    if (task) {
+      const updatedTask = { ...task, ...updates, updatedAt: new Date() };
+      this.tasks.set(id, updatedTask);
+    }
+  }
+
+  async deleteTask(id: number): Promise<void> {
+    this.tasks.delete(id);
   }
 }
 
