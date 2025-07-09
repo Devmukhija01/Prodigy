@@ -53,7 +53,7 @@ export const ChatInterface = () => {
         return uniqueNewMessages.length > 0 ? [...prev, ...uniqueNewMessages] : prev;
       });
     }
-  }, [messages, selectedFriend?.id]);
+  }, [messages, selectedFriend?.id, CURRENT_USER_ID]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
