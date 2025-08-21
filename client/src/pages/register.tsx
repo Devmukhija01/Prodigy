@@ -2,12 +2,14 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Link } from "wouter";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from "lucide-react";
+import axios from "axios"; // Add this at the top
+import { toast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -38,14 +40,53 @@ export default function Register() {
     },
   });
 
-  const onSubmit = async (data: FormData) => {
-    setIsLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log("Register data:", data);
-    setIsLoading(false);
-    // In a real app, handle registration here
-  };
+
+
+const onSubmit = async (data: FormData) => {
+  setIsLoading(true);
+
+  try {
+    const response = await axios.post("http://localhost:5055/api/register", {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      password: data.password,
+    });
+
+    // Store userId in localStorage
+    const userId = response.data?.user?._id;
+    if (userId && userId.length === 24) {
+      localStorage.setItem("userId", userId);
+      console.log("✅ userId saved to localStorage:", userId);
+    }
+
+    toast({
+      title: "Registration Successful 🎉",
+      description: "Welcome to SocialConnect Pro!",
+    });
+    // alert("✅ Registration Successful!\nRegister ID: " + response.data.registerId);
+    // console.log("REGISTER SUCCESS:", response.data);
+  } catch (err: any) {
+    if (err.response) {
+      // alert("❌ Error: " + err.response.data.message);
+      toast({
+        title: "Registration Failed ❌",
+        description: err.response.data.message,
+        variant: "destructive",
+      });
+    } else {
+      // alert("❌ Registration failed. Please try again.");
+      toast({
+        title: "Registration Failed ❌",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }
+
+  setIsLoading(false);
+};
+;
 
   return (
     <div className="min-h-screen flex">
@@ -200,11 +241,11 @@ export default function Register() {
                     />
                     <label htmlFor="agree-terms" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                       I agree to the{" "}
-                      <Link href="/terms" className="text-emerald-600 hover:text-emerald-500">
+                      <Link to="/terms" className="text-emerald-600 hover:text-emerald-500">
                         Terms of Service
                       </Link>{" "}
                       and{" "}
-                      <Link href="/privacy" className="text-emerald-600 hover:text-emerald-500">
+                      <Link to="/privacy" className="text-emerald-600 hover:text-emerald-500">
                         Privacy Policy
                       </Link>
                     </label>
@@ -231,7 +272,7 @@ export default function Register() {
                   <div className="text-center">
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Already have an account?{" "}
-                      <Link href="/login" className="text-emerald-600 hover:text-emerald-500 font-semibold">
+                      <Link to="/login" className="text-emerald-600 hover:text-emerald-500 font-semibold">
                         Sign in
                       </Link>
                     </p>
@@ -286,7 +327,7 @@ export default function Register() {
               <div className="inline-block p-8 bg-white/10 rounded-3xl backdrop-blur-sm border border-white/20 shadow-2xl">
                 <div className="relative">
                   <div className="w-20 h-20 bg-gradient-to-br from-white to-white/80 rounded-2xl flex items-center justify-center transform -rotate-12 shadow-xl">
-                    <div className="text-teal-600 font-bold text-3xl">SCP</div>
+                    <div className="text-teal-600 font-bold text-3xl">PGY</div>
                   </div>
                   <div className="absolute -top-2 -right-2 w-6 h-6 bg-emerald-400 rounded-full animate-ping"></div>
                 </div>
@@ -294,11 +335,11 @@ export default function Register() {
             </div>
             
             <h2 className="text-4xl font-bold mb-6 leading-tight">
-              Start Your Social Media Journey
+            ✨ Start Your Productivity Journey
             </h2>
             
             <p className="text-lg text-white/90 mb-8 leading-relaxed">
-              Create your account and unlock powerful tools to grow your social media presence and engage with your audience effectively.
+            Create your account and unlock powerful tools to manage tasks, organize your day, and boost your productivity effortlessly.
             </p>
             
             <div className="space-y-6">
@@ -307,19 +348,19 @@ export default function Register() {
                   <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2 animate-pulse">
                     <div className="w-8 h-8 bg-white/60 rounded-full"></div>
                   </div>
-                  <div className="text-sm font-medium">Schedule Posts</div>
+                  <div className="text-sm font-medium">Organize Tasks</div>
                 </div>
                 <div className="text-center">
                   <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2 animate-pulse" style={{ animationDelay: '0.5s' }}>
                     <div className="w-8 h-8 bg-white/60 rounded-full"></div>
                   </div>
-                  <div className="text-sm font-medium">Real-time Chat</div>
+                  <div className="text-sm font-medium">Real-Time Chat</div>
                 </div>
                 <div className="text-center">
                   <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2 animate-pulse" style={{ animationDelay: '1s' }}>
                     <div className="w-8 h-8 bg-white/60 rounded-full"></div>
                   </div>
-                  <div className="text-sm font-medium">Manage Brands</div>
+                  <div className="text-sm font-medium">Plan Your Day</div>
                 </div>
               </div>
               

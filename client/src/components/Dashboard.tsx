@@ -1,12 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Calendar, Users, TrendingUp, MessageCircle, Send, FileText, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { Post, Template, Task } from '@shared/schema';
+import { WeatherCard } from '@/components/ui/weather-card';
+import axios from "axios";
 
 const CURRENT_USER_ID = 1;
+interface User {
+  firstName: string;
+  lastName: string;
+  email: string;
+  registerId: string;
+}
 
 export const Dashboard = () => {
   const { data: posts = [] } = useQuery<Post[]>({
@@ -24,7 +32,18 @@ export const Dashboard = () => {
   const recentPosts = posts.slice(0, 3);
   const pendingTasks = tasks.filter(task => task.status === 'pending');
   const completedTasks = tasks.filter(task => task.status === 'completed');
+  const [user, setUser] = useState<User | null>(null);
 
+  // Fetch user data
+  useEffect(() => {
+    axios
+      .get("http://localhost:5055/api/user/me", { withCredentials: true })
+      .then((res) => {
+        console.log("Fetched user:", res.data);
+        setUser(res.data);
+      })
+      .catch((err) => console.error("Error fetching user:", err));
+  }, []);
   const stats = [
     {
       title: "Total Posts",
@@ -76,20 +95,46 @@ export const Dashboard = () => {
       year: 'numeric'
     });
   };
+  const currentHour = new Date().getHours();
+  const getGreeting = () => {
+    if (currentHour < 12) return 'Good morning';
+    if (currentHour < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
 
+  // const userName = 'Alex';
   return (
     <div className="max-w-7xl mx-auto space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-          <p className="text-gray-600 dark:text-gray-400">Overview of your social media automation</p>
+      <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white" data-testid="greeting-title">
+                Hi {user ? `${user.firstName}` : ""} 👋
+              </h1>
+              <p className="text-lg text-gray-600 dark:text-gray-400 mt-1" data-testid="greeting-message">
+                {getGreeting()}, have a great day!
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                Here's what's happening with your social media accounts.
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                <Clock className="w-4 h-4" />
+                <span data-testid="current-time">
+                  {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <Calendar className="w-4 h-4" />
+                <span data-testid="current-date">
+                  {new Date().toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
-        <Button className="bg-gradient-to-r from-primary to-secondary hover:shadow-lg">
-          <Plus size={16} className="mr-2" />
-          Create Post
-        </Button>
-      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -138,7 +183,7 @@ export const Dashboard = () => {
                           {post.status}
                         </Badge>
                         <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {formatDate(post.createdAt)}
+                          {post.createdAt ? formatDate(post.createdAt) : 'Unknown date'}
                         </span>
                       </div>
                     </div>
@@ -214,6 +259,7 @@ export const Dashboard = () => {
           </div>
         </CardContent>
       </Card>
+      <WeatherCard />
     </div>
   );
 };

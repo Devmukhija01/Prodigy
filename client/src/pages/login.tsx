@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Link } from "wouter";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
-
+import axios from "axios";
+import { toast } from "@/hooks/use-toast";
+import { useAuth } from "../../../server/context/Authcontext"; 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -19,6 +22,8 @@ type FormData = z.infer<typeof formSchema>;
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -28,15 +33,122 @@ export default function Login() {
     },
   });
 
+  // const onSubmit = async (data: FormData) => {
+  //   setIsLoading(true);
+  
+  //   try {
+  //     const response = await axios.post("http://localhost:5055/api/login", {
+  //       email: data.email,
+  //       password: data.password,
+  //     }, {
+  //       withCredentials: true
+  //     });
+  
+  //     const token = response.data?.token || "fake-token";
+  //     login(token);
+  
+  //     // ✅ Safe and logged storage
+  //     const userId = response.data?.user?._id;
+  //     if (userId && userId.length === 24) {
+  //       localStorage.setItem("userId", userId);
+  //       console.log("✅ userId saved to localStorage:", userId);
+  //     } else {
+  //       console.warn("⚠️ Invalid userId received:", userId);
+  //       toast({
+  //         title: "Login Warning",
+  //         description: "Invalid user ID received from server. Some features may not work.",
+  //         variant: "destructive"
+  //       });
+  //     }
+
+  //     // ✅ Store user data including avatar
+  //     const userData = response.data?.user;
+  //     if (userData) {
+  //       // Add additional fields that might be missing
+  //       const completeUserData = {
+  //         ...userData,
+  //         id: userData._id, // Ensure id field exists
+  //         registerId: response.data?.registerId // Add registerId from response
+  //       };
+  //       localStorage.setItem("userData", JSON.stringify(completeUserData));
+      
+  //     // Dispatch custom event to notify other components about login
+  //     window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: { userId } }));
+  //     }
+  
+  //     navigate("/");
+  
+  //     toast({
+  //       title: "Login Successful 🎉",
+  //       description: "Welcome to SocialConnect Pro!",
+  //     });
+  
+  //   } catch (err: any) {
+  //     if (err.response) {
+  //       alert("❌ " + err.response.data.message);
+  //     } else {
+  //       alert("❌ Login failed. Try again.");
+  //     }
+  //   }
+  
+  //   setIsLoading(false);
+  // };
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log("Login data:", data);
+  
+    try {
+      const response = await axios.post("http://localhost:5055/api/login", {
+        email: data.email,
+        password: data.password,
+      }, {
+        withCredentials: true
+      });
+  
+      const token = response.data?.token || "fake-token";
+      login(token);
+  
+      // ✅ Store token persistently for Chat
+      localStorage.setItem("authToken", token);
+  
+      // ✅ Safe and logged storage
+      const userId = response.data?.user?._id;
+      if (userId && userId.length === 24) {
+        localStorage.setItem("userId", userId);
+        console.log("✅ userId saved to localStorage:", userId);
+      }
+  
+      // ✅ Store user data including avatar
+      const userData = response.data?.user;
+      if (userData) {
+        const completeUserData = {
+          ...userData,
+          id: userData._id,
+          registerId: response.data?.registerId
+        };
+        localStorage.setItem("userData", JSON.stringify(completeUserData));
+  
+        // Notify chat system
+        window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: { userId } }));
+      }
+  
+      navigate("/chats"); // 👈 redirect to chat after login
+  
+      toast({
+        title: "Login Successful 🎉",
+        description: "Welcome to SocialConnect Pro!",
+      });
+  
+    } catch (err: any) {
+      if (err.response) {
+        alert("❌ " + err.response.data.message);
+      } else {
+        alert("❌ Login failed. Try again.");
+      }
+    }
+  
     setIsLoading(false);
-    // In a real app, handle authentication here
   };
-
+  
   return (
     <div className="min-h-screen flex">
       {/* Left Section - Form */}
@@ -119,7 +231,7 @@ export default function Login() {
                         Remember me
                       </label>
                     </div>
-                    <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-500">
+                    <Link to="/forgot-password" className="text-sm text-blue-600 hover:text-blue-500">
                       Forgot password?
                     </Link>
                   </div>
@@ -145,7 +257,7 @@ export default function Login() {
                   <div className="text-center">
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Don't have an account?{" "}
-                      <Link href="/register" className="text-blue-600 hover:text-blue-500 font-semibold">
+                      <Link to="/register" className="text-blue-600 hover:text-blue-500 font-semibold">
                         Sign up
                       </Link>
                     </p>
@@ -188,17 +300,17 @@ export default function Login() {
               {/* 3D-style logo/icon */}
               <div className="inline-block p-6 bg-white/10 rounded-2xl backdrop-blur-sm border border-white/20 shadow-2xl">
                 <div className="w-16 h-16 bg-gradient-to-br from-white to-white/80 rounded-xl flex items-center justify-center transform rotate-12 shadow-lg">
-                  <div className="text-indigo-600 font-bold text-2xl">SCP</div>
+                  <div className="text-indigo-600 font-bold text-2xl">PGY</div>
                 </div>
               </div>
             </div>
             
             <h2 className="text-4xl font-bold mb-6 leading-tight">
-              Streamline Your Social Media Management
+            Streamline Your Task Management
             </h2>
             
             <p className="text-lg text-white/90 mb-8 leading-relaxed">
-              Join thousands of content creators who trust SocialConnect Pro to manage their social media presence and messaging across all platforms.
+            Join thousands of professionals who trust Prodigy to stay organized, collaborate with teams, and meet deadlines.
             </p>
             
             <div className="grid grid-cols-1 gap-4">
@@ -207,8 +319,8 @@ export default function Login() {
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
                 <div className="text-left">
-                  <div className="font-semibold">Multi-Platform Publishing</div>
-                  <div className="text-sm text-white/80">Schedule posts across all social networks</div>
+                  <div className="font-semibold">Smart Task Lists</div>
+                  <div className="text-sm text-white/80">Keep all your tasks organised</div>
                 </div>
               </div>
               
@@ -218,7 +330,7 @@ export default function Login() {
                 </div>
                 <div className="text-left">
                   <div className="font-semibold">Real-time Chat</div>
-                  <div className="text-sm text-white/80">Connect with users and manage conversations</div>
+                  <div className="text-sm text-white/80">Collaborate with your team instantly</div>
                 </div>
               </div>
               
@@ -227,8 +339,8 @@ export default function Login() {
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
                 <div className="text-left">
-                  <div className="font-semibold">Brand Management</div>
-                  <div className="text-sm text-white/80">Consistent branding across all content</div>
+                  <div className="font-semibold">Project Tracking</div>
+                  <div className="text-sm text-white/80">Monitor progress and meet deadlines</div>
                 </div>
               </div>
             </div>

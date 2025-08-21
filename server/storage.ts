@@ -8,6 +8,7 @@ import {
   brandAssets,
   schedules,
   tasks,
+  groups,
   type User, 
   type InsertUser, 
   type FriendRequest, 
@@ -24,7 +25,9 @@ import {
   type Schedule,
   type InsertSchedule,
   type Task,
-  type InsertTask
+  type InsertTask,
+  type Group,
+  type InsertGroup
 } from "@shared/schema";
 
 export interface IStorage {
@@ -83,10 +86,18 @@ export interface IStorage {
   updateSchedule(id: number, updates: Partial<Schedule>): Promise<void>;
   deleteSchedule(id: number): Promise<void>;
 
+  // Group methods
+  createGroup(group: InsertGroup): Promise<Group>;
+  getGroupById(id: number): Promise<Group | undefined>;
+  getGroupsByUserId(userId: number): Promise<Group[]>;
+  updateGroup(id: number, updates: Partial<Group>): Promise<void>;
+  deleteGroup(id: number): Promise<void>;
+
   // Task methods
   createTask(task: InsertTask): Promise<Task>;
   getTaskById(id: number): Promise<Task | undefined>;
   getTasksByUserId(userId: number): Promise<Task[]>;
+  getTasksWithGroupsByUserId(userId: number): Promise<(Task & { group: Group })[]>;
   updateTask(id: number, updates: Partial<Task>): Promise<void>;
   deleteTask(id: number): Promise<void>;
 }
@@ -101,6 +112,7 @@ export class MemStorage implements IStorage {
   private brandAssets: Map<number, BrandAsset>;
   private schedules: Map<number, Schedule>;
   private tasks: Map<number, Task>;
+  private groups: Map<number, Group>;
   private currentUserId: number;
   private currentFriendRequestId: number;
   private currentFriendshipId: number;
@@ -110,6 +122,7 @@ export class MemStorage implements IStorage {
   private currentBrandAssetId: number;
   private currentScheduleId: number;
   private currentTaskId: number;
+  private currentGroupId: number;
 
   constructor() {
     this.users = new Map();
@@ -130,6 +143,8 @@ export class MemStorage implements IStorage {
     this.currentBrandAssetId = 1;
     this.currentScheduleId = 1;
     this.currentTaskId = 1;
+    this.currentGroupId = 1;
+    this.groups = new Map();
 
     // Initialize with some sample data
     this.initializeSampleData();
@@ -174,6 +189,52 @@ export class MemStorage implements IStorage {
       type: "logo",
       value: "/assets/logo.png",
       isActive: true
+    });
+
+    // Initialize sample groups
+    await this.createGroup({
+      name: "Development Team",
+      description: "Core development team for the main project",
+      ownerId: 1,
+      isPrivate: false
+    });
+
+    await this.createGroup({
+      name: "Design Team",
+      description: "UI/UX design and creative team",
+      ownerId: 1,
+      isPrivate: false
+    });
+
+    // Initialize sample tasks
+    await this.createTask({
+      userId: 1,
+      groupId: 1,
+      title: "Implement User Authentication",
+      description: "Add login and registration functionality to the app",
+      status: "pending",
+      priority: "high",
+      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
+    });
+
+    await this.createTask({
+      userId: 1,
+      groupId: 1,
+      title: "Fix Navigation Bug",
+      description: "Resolve the sidebar navigation issue on mobile devices",
+      status: "pending",
+      priority: "medium",
+      dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // 3 days from now
+    });
+
+    await this.createTask({
+      userId: 1,
+      groupId: 2,
+      title: "Design New Landing Page",
+      description: "Create mockups for the new landing page design",
+      status: "completed",
+      priority: "high",
+      dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) // 2 days ago
     });
   }
 
@@ -488,6 +549,7 @@ export class MemStorage implements IStorage {
       description: insertTask.description || null,
       priority: insertTask.priority || "medium",
       dueDate: insertTask.dueDate || null,
+      groupId: insertTask.groupId || null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -503,6 +565,17 @@ export class MemStorage implements IStorage {
     return Array.from(this.tasks.values()).filter(task => task.userId === userId);
   }
 
+  async getTasksWithGroupsByUserId(userId: number): Promise<(Task & { group: Group })[]> {
+    const tasks = Array.from(this.tasks.values()).filter(task => task.userId === userId);
+    return tasks.map(task => {
+      const group = task.groupId ? this.groups.get(task.groupId) : null;
+      return {
+        ...task,
+        group: group || { id: 0, name: 'No Group', description: '', ownerId: 0, isPrivate: false, createdAt: new Date() }
+      };
+    });
+  }
+
   async updateTask(id: number, updates: Partial<Task>): Promise<void> {
     const task = this.tasks.get(id);
     if (task) {
@@ -513,6 +586,40 @@ export class MemStorage implements IStorage {
 
   async deleteTask(id: number): Promise<void> {
     this.tasks.delete(id);
+  }
+
+  // Group methods
+  async createGroup(insertGroup: InsertGroup): Promise<Group> {
+    const id = this.currentGroupId++;
+    const group: Group = {
+      ...insertGroup,
+      id,
+      description: insertGroup.description || null,
+      isPrivate: insertGroup.isPrivate || false,
+      createdAt: new Date(),
+    };
+    this.groups.set(id, group);
+    return group;
+  }
+
+  async getGroupById(id: number): Promise<Group | undefined> {
+    return this.groups.get(id);
+  }
+
+  async getGroupsByUserId(userId: number): Promise<Group[]> {
+    return Array.from(this.groups.values()).filter(group => group.ownerId === userId);
+  }
+
+  async updateGroup(id: number, updates: Partial<Group>): Promise<void> {
+    const group = this.groups.get(id);
+    if (group) {
+      const updatedGroup = { ...group, ...updates };
+      this.groups.set(id, updatedGroup);
+    }
+  }
+
+  async deleteGroup(id: number): Promise<void> {
+    this.groups.delete(id);
   }
 }
 

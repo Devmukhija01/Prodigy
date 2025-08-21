@@ -1,5 +1,12 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+function getCookie(name: string): string | undefined {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift();
+  return undefined;
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -7,21 +14,35 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-export async function apiRequest(
+export const BASE_URL = "http://localhost:5055";
+
+export const apiRequest = async (
   method: string,
   url: string,
-  data?: unknown | undefined,
-): Promise<Response> {
-  const res = await fetch(url, {
+  body?: any,
+  headers: any = {}
+) => {
+  const token = getCookie("token"); // or however you're storing your token
+
+  const response = await fetch(`${BASE_URL}${url}`, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: token ? `Bearer ${token}` : "",
+      ...headers,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+    credentials: "include", // if needed for cookies
   });
 
-  await throwIfResNotOk(res);
-  return res;
-}
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "API request failed");
+  }
+
+  return response;
+};
+
 
 type UnauthorizedBehavior = "returnNull" | "throw";
 export const getQueryFn: <T>(options: {
@@ -55,3 +76,9 @@ export const queryClient = new QueryClient({
     },
   },
 });
+// ✅ Get accepted friends (for chats)
+export const getAcceptedFriends = async (userId: string) => {
+  const response = await fetch(`http://localhost:5055/api/friend-requests/accepted/${userId}`);
+  if (!response.ok) throw new Error("Failed to fetch accepted friends");
+  return response.json();
+};

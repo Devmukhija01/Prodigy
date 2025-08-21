@@ -6,10 +6,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { User } from '@shared/schema';
+// import { User } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
+import user from 'server/routes/user';
 
-const CURRENT_USER_ID = 1; // This would come from authentication context
+const CURRENT_USER_ID = localStorage.getItem("userId");
+ // gives "1"
+
+ console.log("🚀 CURRENT_USER_ID =", CURRENT_USER_ID);
 
 export const SearchUsers = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,11 +23,41 @@ export const SearchUsers = () => {
 
   const { data: user, isLoading, error } = useQuery({
     queryKey: ['/api/users/search', searchQuery],
+    queryFn: async () => {
+      if (!searchQuery) return null;
+    
+      const res = await fetch(`http://localhost:5055/api/user/search?registerId=${encodeURIComponent(searchQuery)}`);
+
+    
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text);
+      }
+    
+      return res.json();
+    },
     enabled: !!searchQuery,
   });
 
   const sendRequestMutation = useMutation({
     mutationFn: async (toUserId: number) => {
+      // if (!CURRENT_USER_ID) {
+      //   toast({
+      //     title: "Error",
+      //     description: "You must be logged in to send a friend request.",
+      //     variant: "destructive",
+      //   });
+      //   return;
+      // }
+      if (!CURRENT_USER_ID || CURRENT_USER_ID.length !== 24) {
+        toast({
+          title: "Invalid Session",
+          description: "Please log in again — user ID is not valid.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       const response = await apiRequest('POST', '/api/friend-requests', {
         fromUserId: CURRENT_USER_ID,
         toUserId,
@@ -61,7 +95,7 @@ export const SearchUsers = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
+    <div className="w-full max-w-4xl mx-auto space-y-8 px-4 lg:px-8">
       {/* Search Header */}
       <div className="text-center">
         <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Find Users</h2>
@@ -96,14 +130,17 @@ export const SearchUsers = () => {
 
       {/* Search Results */}
       {error && (
-        <Card className="glass-effect shadow-xl">
-          <CardContent className="p-6 text-center">
-            <p className="text-red-600 dark:text-red-400">
-              {error.message.includes('404') ? 'User not found' : 'Error searching for user'}
-            </p>
-          </CardContent>
-        </Card>
-      )}
+  <Card className="glass-effect shadow-xl">
+    <CardContent className="p-6 text-center">
+      <p className="text-red-600 dark:text-red-400">
+        {error.message?.includes('User not found') 
+          ? 'User not found' 
+          : `Error searching for user: ${error.message}`}
+      </p>
+    </CardContent>
+  </Card>
+)}
+
 
       {user && (
         <Card className="glass-effect shadow-xl">
