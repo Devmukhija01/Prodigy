@@ -60,7 +60,10 @@ app.use("/api/join-requests", joinRequestsRoutes);
 
 // MongoDB Connection
 mongoose
-  .connect(process.env.MONGO_URL as string)
+  .connect(process.env.MONGO_URL as string,{
+    useNewUrlParser:true,
+    useUnifiedTopology:true,
+  })
   .then(() => {
     console.log("✅ Connected to MongoDB");
     const PORT = process.env.PORT || 5055;
