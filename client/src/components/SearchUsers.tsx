@@ -26,7 +26,7 @@ export const SearchUsers = () => {
     queryFn: async () => {
       if (!searchQuery) return null;
     
-      const res = await fetch(`http://https://prodigy-59mg.onrender.com/api/user/search?registerId=${encodeURIComponent(searchQuery)}`);
+      const res = await fetch(`https://prodigy-59mg.onrender.com/api/user/search?registerId=${encodeURIComponent(searchQuery)}`);
 
     
       if (!res.ok) {

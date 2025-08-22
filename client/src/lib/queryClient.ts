@@ -14,7 +14,7 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-export const BASE_URL = "http://https://prodigy-59mg.onrender.com";
+export const BASE_URL = "https://prodigy-59mg.onrender.com";
 
 export const apiRequest = async (
   method: string,
@@ -78,7 +78,7 @@ export const queryClient = new QueryClient({
 });
 // ✅ Get accepted friends (for chats)
 export const getAcceptedFriends = async (userId: string) => {
-  const response = await fetch(`http://https://prodigy-59mg.onrender.com/api/friend-requests/accepted/${userId}`);
+  const response = await fetch(`https://prodigy-59mg.onrender.com/api/friend-requests/accepted/${userId}`);
   if (!response.ok) throw new Error("Failed to fetch accepted friends");
   return response.json();
 };

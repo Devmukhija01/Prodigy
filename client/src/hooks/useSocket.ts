@@ -18,7 +18,7 @@ export function useSocket(userId: string) {
   useEffect(() => {
     if (!userId) return;
 
-    const socket = io("http://https://prodigy-59mg.onrender.com", {
+    const socket = io("https://prodigy-59mg.onrender.com", {
       withCredentials: true,
       path: "/socket.io",
       query: { userId },

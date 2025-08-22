@@ -37,7 +37,7 @@ export default function Login() {
   //   setIsLoading(true);
   
   //   try {
-  //     const response = await axios.post("http://https://prodigy-59mg.onrender.com/api/login", {
+  //     const response = await axios.post("https://prodigy-59mg.onrender.com/api/login", {
   //       email: data.email,
   //       password: data.password,
   //     }, {
@@ -97,7 +97,7 @@ export default function Login() {
     setIsLoading(true);
   
     try {
-      const response = await axios.post("http://https://prodigy-59mg.onrender.com/api/login", {
+      const response = await axios.post("https://prodigy-59mg.onrender.com/api/login", {
         email: data.email,
         password: data.password,
       }, {
