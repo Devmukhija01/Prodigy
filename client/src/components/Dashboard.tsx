@@ -37,7 +37,7 @@ export const Dashboard = () => {
   // Fetch user data
   useEffect(() => {
     axios
-      .get("http://localhost:5055/api/user/me", { withCredentials: true })
+      .get("http://https://prodigy-59mg.onrender.com/api/user/me", { withCredentials: true })
       .then((res) => {
         console.log("Fetched user:", res.data);
         setUser(res.data);

@@ -73,7 +73,7 @@ export function Sidebar({ activeScreen, onScreenChange, pendingCount = 0, isMobi
 
     // Then fetch fresh data from server
     axios
-      .get("http://localhost:5055/api/user/me", { withCredentials: true })
+      .get("http://https://prodigy-59mg.onrender.com/api/user/me", { withCredentials: true })
       .then((res) => {
         setUser(res.data);
         // Update localStorage with fresh data

@@ -74,7 +74,7 @@ export const Posts = () => {
     queryKey: ['/api/tasks/user/personal', currentUserId],
     queryFn: async () => {
       if (!currentUserId) return [];
-      const response = await axios.get(`http://localhost:5055/api/tasks/user/${currentUserId}/personal`, { withCredentials: true });
+      const response = await axios.get(`http://https://prodigy-59mg.onrender.com/api/tasks/user/${currentUserId}/personal`, { withCredentials: true });
       return response.data;
     },
     enabled: !!currentUserId,
@@ -85,7 +85,7 @@ export const Posts = () => {
     queryKey: ['/api/groups/user', currentUserId],
     queryFn: async () => {
       if (!currentUserId) return [];
-      const response = await axios.get(`http://localhost:5055/api/groups/user/${currentUserId}`, { withCredentials: true });
+      const response = await axios.get(`http://https://prodigy-59mg.onrender.com/api/groups/user/${currentUserId}`, { withCredentials: true });
       return response.data;
     },
     enabled: !!currentUserId,
@@ -97,8 +97,8 @@ export const Posts = () => {
     queryFn: async () => {
       if (!currentUserId) return [];
       const url = selectedTeam && selectedTeam !== 'all'
-        ? `http://localhost:5055/api/tasks/user/${currentUserId}/team/${selectedTeam}`
-        : `http://localhost:5055/api/tasks/user/${currentUserId}/team`;
+        ? `http://https://prodigy-59mg.onrender.com/api/tasks/user/${currentUserId}/team/${selectedTeam}`
+        : `http://https://prodigy-59mg.onrender.com/api/tasks/user/${currentUserId}/team`;
       const response = await axios.get(url, { withCredentials: true });
       return response.data;
     },
@@ -112,7 +112,7 @@ export const Posts = () => {
         userId: currentUserId // Always create task for current user
       };
       console.log('Creating task with data:', taskData);
-      const response = await axios.post('http://localhost:5055/api/tasks', taskData, { withCredentials: true });
+      const response = await axios.post('http://https://prodigy-59mg.onrender.com/api/tasks', taskData, { withCredentials: true });
       console.log('Task created successfully:', response.data);
       return response.data;
     },
@@ -139,7 +139,7 @@ export const Posts = () => {
   const editTaskMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<Task> }) => {
       console.log('Updating task:', id, data);
-      const response = await axios.patch(`http://localhost:5055/api/tasks/${id}`, data, { withCredentials: true });
+      const response = await axios.patch(`http://https://prodigy-59mg.onrender.com/api/tasks/${id}`, data, { withCredentials: true });
       console.log('Task updated successfully:', response.data);
       return response.data;
     },
@@ -166,7 +166,7 @@ export const Posts = () => {
   const deleteTaskMutation = useMutation({
     mutationFn: async (id: string) => {
       console.log('Deleting task:', id);
-      const response = await axios.delete(`http://localhost:5055/api/tasks/${id}`, { withCredentials: true });
+      const response = await axios.delete(`http://https://prodigy-59mg.onrender.com/api/tasks/${id}`, { withCredentials: true });
       console.log('Task deleted successfully:', response.data);
       return response.data;
     },

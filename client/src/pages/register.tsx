@@ -46,7 +46,7 @@ const onSubmit = async (data: FormData) => {
   setIsLoading(true);
 
   try {
-    const response = await axios.post("http://localhost:5055/api/register", {
+    const response = await axios.post("http://https://prodigy-59mg.onrender.com/api/register", {
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,

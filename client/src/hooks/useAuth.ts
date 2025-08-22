@@ -28,7 +28,7 @@ export const useAuth = (): AuthContextType => {
     if (tokenExists) {
       // Validate token and fetch user details
       axios
-        .get<User>('http://localhost:5055/api/user/me', { withCredentials: true })
+        .get<User>('http://https://prodigy-59mg.onrender.com/api/user/me', { withCredentials: true })
         .then((res) => {
           setUser(res.data);
         })
@@ -47,14 +47,14 @@ export const useAuth = (): AuthContextType => {
   const login = async (email: string, password: string) => {
     try {
       const res = await axios.post(
-        'http://localhost:5055/api/auth/login',
+        'http://https://prodigy-59mg.onrender.com/api/auth/login',
         { email, password },
         { withCredentials: true }
       );
 
       if (res.data) {
         // Fetch user data after successful login
-        const userRes = await axios.get<User>('http://localhost:5055/api/user/me', {
+        const userRes = await axios.get<User>('http://https://prodigy-59mg.onrender.com/api/user/me', {
           withCredentials: true,
         });
         setUser(userRes.data);
