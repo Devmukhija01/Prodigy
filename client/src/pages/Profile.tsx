@@ -84,7 +84,7 @@ export default function Profile() {
         }
         
         // Then fetch fresh data from server
-        const response = await axios.get('https://prodigy-59mg.onrender.com/api/user/me', {
+        const response = await axios.get('http://localhost:5055/api/user/me', {
           withCredentials: true
         });
         
@@ -140,7 +140,7 @@ export default function Profile() {
       setSavingProfile(true);
       
       // Update user data on the backend
-      const response = await axios.put('https://prodigy-59mg.onrender.com/api/user/me', {
+      const response = await axios.put('http://localhost:5055/api/user/me', {
         firstName: editedUser.firstName,
         lastName: editedUser.lastName,
         email: editedUser.email,
@@ -244,7 +244,7 @@ export default function Profile() {
       formData.append('avatar', file);
 
       // Upload photo to backend
-      const response = await axios.post('https://prodigy-59mg.onrender.com/api/user/upload-avatar', formData, {
+      const response = await axios.post('http://localhost:5055/api/user/upload-avatar', formData, {
         withCredentials: true,
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -308,7 +308,7 @@ export default function Profile() {
       setUploadingPhoto(true);
       
       // Send crop request to server
-      const response = await axios.post('https://prodigy-59mg.onrender.com/api/user/crop-avatar', {
+      const response = await axios.post('http://localhost:5055/api/user/crop-avatar', {
         imageUrl: cropImage,
         cropY: imagePosition.y
       }, {

@@ -135,7 +135,7 @@ router.post("/upload-avatar", requireAuth, upload.single('avatar'), async (req: 
     }
 
     // Generate the avatar URL with full backend URL
-    const avatarUrl = `https://prodigy-59mg.onrender.com/uploads/avatars/${req.file.filename}`;
+    const avatarUrl = `http://localhost:5055/uploads/avatars/${req.file.filename}`;
 
 
 
@@ -215,7 +215,7 @@ router.post("/crop-avatar", requireAuth, async (req: AuthenticatedRequest, res) 
       .toFile(outputPath);
 
     // Generate new avatar URL
-    const newAvatarUrl = `https://prodigy-59mg.onrender.com/uploads/avatars/${newFilename}`;
+    const newAvatarUrl = `http://localhost:5055/uploads/avatars/${newFilename}`;
 
     // Update user's avatar in database
     const updatedUser = await User.findByIdAndUpdate(

@@ -1,5 +1,5 @@
+// client/src/hooks/useWebSocket.ts
 import { useEffect, useState, useRef } from "react";
-import { sendFriendRequest } from "server/controllers/friendRequestController";
 import { io, Socket } from "socket.io-client";
 
 interface Message {
@@ -14,21 +14,17 @@ export function useSocket(userId: string) {
   const [friendRequests, setFriendRequests] = useState<any[]>([]);
   const [userStatuses, setUserStatuses] = useState<Map<string, boolean>>(new Map());
   const socketRef = useRef<Socket | null>(null);
-
+  
+  
   useEffect(() => {
     if (!userId) return;
 
-    const socket = io("https://prodigy-59mg.onrender.com", {
+    const socket = io("http://localhost:5055", {
       withCredentials: true,
       path: "/socket.io",
       query: { userId },
-      transports: ["websocket", "polling"], // force same transports
+      transports: ["websocket"],
     });
-    
-    socket.on("connect_error", (err) => {
-      console.error("❌ Socket connect error:", err.message, err);
-    });
-    
 
     socketRef.current = socket;
 
@@ -41,16 +37,13 @@ export function useSocket(userId: string) {
     });
 
     socket.on("message", (message: Message) => {
-      console.log("📩 New message:", message);
       setMessages((prev) => [...prev, message]);
     });
 
     socket.on("friendRequest", (request) => {
-      console.log("👥 Friend request:", request);
       setFriendRequests((prev) => [...prev, request]);
     });
 
-    // ✅ Track online/offline status
     socket.on("userStatus", ({ userId, online }) => {
       setUserStatuses((prev) => {
         const newStatuses = new Map(prev);
@@ -73,7 +66,7 @@ export function useSocket(userId: string) {
     messages,
     friendRequests,
     setFriendRequests,
-    userStatuses, // ✅ return user statuses
+    userStatuses,
     sendMessage,
   };
 }

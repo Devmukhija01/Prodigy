@@ -233,7 +233,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
 
     // Then fetch fresh data from server
     axios
-      .get("https://prodigy-59mg.onrender.com/api/user/me", { withCredentials: true })
+      .get("http://localhost:5055/api/user/me", { withCredentials: true })
       .then((res) => {
         setUser(res.data);
         // Update localStorage with fresh data
@@ -244,7 +244,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
 
   const handleLogout = async () => {
     try {
-      await axios.post("https://prodigy-59mg.onrender.com/api/logout", {}, {
+      await axios.post("http://localhost:5055/api/logout", {}, {
         withCredentials: true,
       });
   

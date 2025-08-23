@@ -61,7 +61,7 @@ export default function Brand() {
     queryKey: ['/api/groups/user', currentUser?._id],
     queryFn: async () => {
       if (!currentUser?._id) return [];
-      const response = await axios.get(`https://prodigy-59mg.onrender.com/api/groups/user/${currentUser._id}`, { withCredentials: true });
+      const response = await axios.get(`http://localhost:5055/api/groups/user/${currentUser._id}`, { withCredentials: true });
       return response.data;
     },
     enabled: !!currentUser?._id,
@@ -72,7 +72,7 @@ export default function Brand() {
     queryKey: ['/api/join-requests/owner', currentUser?._id],
     queryFn: async () => {
       if (!currentUser?._id) return [];
-      const response = await axios.get(`https://prodigy-59mg.onrender.com/api/join-requests/owner/${currentUser._id}`, { withCredentials: true });
+      const response = await axios.get(`http://localhost:5055/api/join-requests/owner/${currentUser._id}`, { withCredentials: true });
       return response.data;
     },
     enabled: !!currentUser?._id,
@@ -87,7 +87,7 @@ export default function Brand() {
       console.log('Current user ID:', currentUser._id);
       
       try {
-        const response = await axios.get(`https://prodigy-59mg.onrender.com/api/join-requests/user/${currentUser._id}`, { withCredentials: true });
+        const response = await axios.get(`http://localhost:5055/api/join-requests/user/${currentUser._id}`, { withCredentials: true });
         console.log('Raw response data:', response.data);
         
         // Debug: Log each request
@@ -130,7 +130,7 @@ export default function Brand() {
     queryKey: ['/api/tasks/user/with-groups', currentUser?._id],
     queryFn: async () => {
       if (!currentUser?._id) return [];
-      const response = await axios.get(`https://prodigy-59mg.onrender.com/api/tasks/user/${currentUser._id}/with-groups`, { withCredentials: true });
+      const response = await axios.get(`http://localhost:5055/api/tasks/user/${currentUser._id}/with-groups`, { withCredentials: true });
       return response.data;
     },
     enabled: !!currentUser?._id,
@@ -141,7 +141,7 @@ export default function Brand() {
     queryKey: ['/api/user/friends', currentUser?._id],
     queryFn: async () => {
       if (!currentUser?._id) return [];
-      const response = await axios.get(`https://prodigy-59mg.onrender.com/api/user/friends`, { withCredentials: true });
+      const response = await axios.get(`http://localhost:5055/api/user/friends`, { withCredentials: true });
       return response.data;
     },
     enabled: !!currentUser?._id,
@@ -152,7 +152,7 @@ export default function Brand() {
     queryKey: ['/api/tasks/group', selectedGroupForTasks?._id],
     queryFn: async () => {
       if (!selectedGroupForTasks?._id) return [];
-      const response = await axios.get(`https://prodigy-59mg.onrender.com/api/tasks/group/${selectedGroupForTasks._id}`, { withCredentials: true });
+      const response = await axios.get(`http://localhost:5055/api/tasks/group/${selectedGroupForTasks._id}`, { withCredentials: true });
       return response.data;
     },
     enabled: !!selectedGroupForTasks?._id,
@@ -231,7 +231,7 @@ export default function Brand() {
       const { assigneeId, ...serverData } = taskData;
       
       console.log('Creating task with data:', serverData);
-      const response = await axios.post('https://prodigy-59mg.onrender.com/api/tasks', serverData, { withCredentials: true });
+      const response = await axios.post('http://localhost:5055/api/tasks', serverData, { withCredentials: true });
       console.log('Task created successfully:', response.data);
       return response.data;
     },
@@ -485,7 +485,7 @@ export default function Brand() {
                     const testUser = friends[0];
                     console.log('Creating test join request for:', testUser.firstName, 'to join:', testGroup.name);
                     
-                    const response = await axios.post('https://prodigy-59mg.onrender.com/api/join-requests/test-create', {
+                    const response = await axios.post('http://localhost:5055/api/join-requests/test-create', {
                       userId: testUser._id,
                       groupId: testGroup._id
                     }, { withCredentials: true });
@@ -523,7 +523,7 @@ export default function Brand() {
               onClick={async () => {
                 // Debug: Check all join requests
                 try {
-                  const response = await axios.get('https://prodigy-59mg.onrender.com/api/join-requests/debug/all', { withCredentials: true });
+                  const response = await axios.get('http://localhost:5055/api/join-requests/debug/all', { withCredentials: true });
                   console.log('All join requests:', response.data);
                   toast({
                     title: "Debug Info",
@@ -549,7 +549,7 @@ export default function Brand() {
                   if (groups.length > 0 && friends.length > 0) {
                     const testGroup = groups[0];
                     const testUser = friends[0];
-                    const response = await axios.post('https://prodigy-59mg.onrender.com/api/join-requests/test-create', {
+                    const response = await axios.post('http://localhost:5055/api/join-requests/test-create', {
                       userId: testUser._id,
                       groupId: testGroup._id
                     }, { withCredentials: true });
@@ -585,7 +585,7 @@ export default function Brand() {
               onClick={async () => {
                 // Debug: Comprehensive flow test
                 try {
-                  const response = await axios.get(`https://prodigy-59mg.onrender.com/api/join-requests/debug/flow/${currentUser?._id}`, { withCredentials: true });
+                  const response = await axios.get(`http://localhost:5055/api/join-requests/debug/flow/${currentUser?._id}`, { withCredentials: true });
                   console.log('Debug flow response:', response.data);
                   toast({
                     title: "Debug Flow",
@@ -614,7 +614,7 @@ export default function Brand() {
                 
                 // Test API call directly
                 try {
-                  const response = await axios.get(`https://prodigy-59mg.onrender.com/api/join-requests/user/${currentUser?._id}`, { withCredentials: true });
+                  const response = await axios.get(`http://localhost:5055/api/join-requests/user/${currentUser?._id}`, { withCredentials: true });
                   console.log('Direct API response:', response.data);
                   toast({
                     title: "API Test",
