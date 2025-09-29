@@ -461,9 +461,9 @@ export default function Brand() {
               className="relative"
             >
               <Bell className="w-4 h-4 mr-2" />
-              {(ownerJoinRequests.length + filteredUserJoinRequests.length) > 0 && (
+              {(filteredUserJoinRequests.length) > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {ownerJoinRequests.length + filteredUserJoinRequests.length}
+                  {filteredUserJoinRequests.length}
                 </span>
               )}
               Requests
@@ -1357,7 +1357,7 @@ export default function Brand() {
 
                 {/* User Join Requests */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Your Join Requests</h3>
+                  {/* <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Your Join Requests</h3> */}
                   
                   {/* Debug: Show raw data */}
                   {/* <div className="bg-yellow-100 dark:bg-yellow-900 p-4 rounded-lg">
@@ -1406,13 +1406,13 @@ export default function Brand() {
                   )} */}
                   
                   {/* Simple debug info */}
-                  <div className="bg-red-100 dark:bg-red-900 p-2 rounded mb-4">
+                  {/* <div className="bg-red-100 dark:bg-red-900 p-2 rounded mb-4">
                     <p className="text-sm">Debug: {userJoinRequests.length} total requests, {filteredUserJoinRequests.length} filtered</p>
                     <p className="text-sm">Current User: {currentUser?._id}</p>
                     <p className="text-sm">Loading: {userRequestsLoading ? 'Yes' : 'No'}</p>
                     <p className="text-sm">Expected User ID: 687ddf0201f64e8c786d60a0</p>
                     <p className="text-sm">Match: {currentUser?._id === '687ddf0201f64e8c786d60a0' ? 'YES' : 'NO'}</p>
-                  </div>
+                  </div> */}
                   
                   {/* Show ALL join requests for debugging */}
                   {userJoinRequests.length > 0 && (

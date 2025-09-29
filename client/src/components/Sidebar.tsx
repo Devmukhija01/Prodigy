@@ -227,7 +227,7 @@ export function Sidebar({ activeScreen, onScreenChange, pendingCount = 0, isMobi
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user ? `${user.firstName} ${user.lastName}` : "Loading..."}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">Pro Plan</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user? `${user?.registerId}`:"Loading..."}</p>
               </div>
               <Button
                 variant="ghost"
