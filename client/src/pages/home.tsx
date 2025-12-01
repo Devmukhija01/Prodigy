@@ -95,6 +95,7 @@ import { useActiveScreen } from '../ActiveScreenContext';
 import Sprint from './Sprint';
 import { Footer } from '@/components/Footer';
 import FriendsManagement from './FriendsManagement';
+import { MessengerApp } from '@/components/MessengerApp';
 
 const CURRENT_USER_ID = 1;
 
@@ -133,6 +134,8 @@ export default function Home() {
         return <Sprint />;
       case 'friends':
         return <FriendsManagement />;
+      case 'NewMessage':
+        return <MessengerApp />;
       default:
         return <Dashboard />;
     }

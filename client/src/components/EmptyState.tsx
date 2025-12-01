@@ -17,7 +17,7 @@ export default function EmptyState({ icon: Icon, title, description, action, var
   
   return (
     <div 
-      className={`flex flex-col items-center justify-center text-center ${isCompact ? 'py-10 px-4' : 'py-16 px-6'}`}
+      className={`flex flex-col items-center justify-center text-center`}
       data-testid="empty-state-container"
     >
       <div className={`
