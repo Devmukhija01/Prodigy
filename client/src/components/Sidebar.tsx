@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 import axios from 'axios';
 import { useAvatar } from '@/hooks/useAvatar';
 
-type Screen = 'search' | 'pending' | 'chat' | 'dashboard' | 'posts' | 'templates' | 'brand' | 'profile' | 'sprint';
+type Screen = 'search' | 'pending' | 'chat' | 'dashboard' | 'posts' | 'templates' | 'brand' | 'profile' | 'sprint' | 'friends';
 
 interface SidebarProps {
   activeScreen: string;
@@ -46,12 +46,13 @@ interface User {
 const navigationItems = [
   { id: 'dashboard', label: 'Dashboard', icon: BarChart3, isPrimary: true },
   { id: 'posts', label: 'Tasks', icon: Send, isPrimary: true },
-  { id: 'templates', label: 'Templates', icon: FileText, isPrimary: true },
+  // { id: 'templates', label: 'Templates', icon: FileText, isPrimary: true },
   { id: 'brand', label: 'Groups', icon: Palette, isPrimary: true },
-  { id: 'search', label: 'Find Users', icon: Users, isPrimary: false },
-  { id: 'pending', label: 'Requests', icon: Clock, isPrimary: false },
+  // { id: 'search', label: 'Find Users', icon: Users, isPrimary: false },
+  // { id: 'pending', label: 'Requests', icon: Clock, isPrimary: false },
   { id: 'chat', label: 'Chats', icon: MessageCircle, isPrimary: false },
   { id: 'sprint', label: 'Sprint', icon: MessageCircle, isPrimary: false },
+  { id: 'friends', label: 'Friends', icon: Users, isPrimary: false },
 ];
 
 export function Sidebar({ activeScreen, onScreenChange, pendingCount = 0, isMobileOpen, onMobileClose }: SidebarProps) {

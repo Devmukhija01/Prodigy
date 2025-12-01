@@ -95,7 +95,7 @@ const onSubmit = async (data: FormData) => {
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Create Account</h1>
-            <p className="text-gray-600 dark:text-gray-400">Join SocialConnect Pro and start managing your social media</p>
+            <p className="text-gray-600 dark:text-gray-400">Join Prodigy and start managing your Tasks & Sprints</p>
           </div>
 
           <Card className="border-0 shadow-xl">

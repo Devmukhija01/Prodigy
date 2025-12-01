@@ -893,6 +893,3 @@ export const ChatInterface = () => {
       </div>
     );
 };
-
-
-

@@ -94,6 +94,7 @@ import Profile from './Profile';
 import { useActiveScreen } from '../ActiveScreenContext';
 import Sprint from './Sprint';
 import { Footer } from '@/components/Footer';
+import FriendsManagement from './FriendsManagement';
 
 const CURRENT_USER_ID = 1;
 
@@ -116,20 +117,22 @@ export default function Home() {
         return <Dashboard />;
       case 'posts':
         return <Posts />;
-      case 'templates':
-        return <Templates />;
+      // case 'templates':
+      //   return <Templates />;
       case 'brand':
         return <Brand />;
-      case 'search':
-        return <SearchUsers />;
-      case 'pending':
-        return <PendingRequests />;
+      // case 'search':
+      //   return <SearchUsers />;
+      // case 'pending':
+      //   return <PendingRequests />;
       case 'chat':
         return <ChatInterface />;
       case 'profile':
         return <Profile />;
       case 'sprint':
         return <Sprint />;
+      case 'friends':
+        return <FriendsManagement />;
       default:
         return <Dashboard />;
     }
@@ -177,7 +180,7 @@ export default function Home() {
         <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8">
           {renderActiveScreen()}
         </main>
-        <Footer />
+        {/* <Footer /> */}
       </div>
     </div>
   );
