@@ -17,6 +17,7 @@ import joinRequestsRoutes from "./routes/join-requests";
 
 // ✅ import the new Socket.IO setup function
 import { setupSocketServer } from "./socket";
+import { log } from "console";
 
 dotenv.config();
 
@@ -57,7 +58,31 @@ app.use("/api/weather", weatherRoutes);
 app.use("/api/tasks", tasksRoutes);
 app.use("/api/groups", groupsRoutes);
 app.use("/api/join-requests", joinRequestsRoutes);
+app.use((req, res, next) => {
+  const start = Date.now();
+  const path = req.path;
+  let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
+  const originalResJson = res.json;
+  res.json = function (bodyJson, ...args) {
+    capturedJsonResponse = bodyJson;
+    return originalResJson.apply(res, [bodyJson, ...args]);
+  };
+
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    if (path.startsWith("/api")) {
+      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+      if (capturedJsonResponse) {
+        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+      }
+
+      log(logLine);
+    }
+  });
+
+  next();
+});
 // MongoDB Connection
 mongoose
   .connect(process.env.MONGO_URL as string,{

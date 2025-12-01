@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, JSX } from 'react';
 import { Link } from 'wouter';
-import { Plus, Users, CheckCircle, Clock, Search, Bell, UserPlus, Edit, Trash2, Calendar } from 'lucide-react';
+import { Plus, Users, CheckCircle, Clock, Search, Bell, UserPlus, Edit, Trash2, Calendar, Eye, MoreVertical} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,10 +17,28 @@ import { z } from 'zod';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import axios from 'axios';
+import { createPortal } from 'react-dom';
 
 function isOwnerObject(owner: any): owner is { _id: string; firstName: string; lastName: string; email: string; avatar?: string } {
   return owner && typeof owner === 'object' && '_id' in owner && 'firstName' in owner && 'lastName' in owner && 'email' in owner;
 }
+function Tooltip({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="relative group inline-block">
+      {children}
+      <div
+        role="tooltip"
+        className="pointer-events-none invisible opacity-0 translate-y-1 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150 ease-out absolute z-50 left-1/2 -translate-x-1/2 mt-2 w-max max-w-xs"
+      >
+        <div className="rounded-md bg-slate-800 text-white text-sm px-3 py-2 shadow-lg whitespace-nowrap">
+          {label}
+        </div>
+        <div className="absolute left-1/2 -translate-x-1/2 top-0 mt-[-6px] w-2 h-2 rotate-45 bg-slate-800"></div>
+      </div>
+    </div>
+  );
+}
+
 
 function isOwnerString(owner: any): owner is string {
   return typeof owner === 'string';
@@ -35,11 +53,157 @@ export default function Brand() {
   const [viewFilter, setViewFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedGroupForTasks, setSelectedGroupForTasks] = useState<Group | null>(null);
-  
+  // NEW — holds group pending deletion for the confirmation dialog
+  const [groupToDelete, setGroupToDelete] = useState<Group | null>(null);
+  const [membersDialogGroup, setMembersDialogGroup] = useState<Group | null>(null);
+  const [addMembersGroup, setAddMembersGroup] = useState<Group | null>(null);
+  const [selectedMemberToAdd, setSelectedMemberToAdd] = useState<string | null>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
+  
+  function MenuButton({ group }: { group: Group }) {
+    const [open, setOpen] = useState(false);
+    const [position, setPosition] = useState<{ top: number; left: number; openUp: boolean } | null>(null);
+    const buttonRef = useRef<HTMLButtonElement | null>(null);
+    const menuRef = useRef<HTMLDivElement | null>(null);
+  
+    // compute menu position relative to viewport and decide up/down
+    const computePosition = () => {
+      const btn = buttonRef.current;
+      if (!btn) return;
+      const rect = btn.getBoundingClientRect();
+      const menuApproxHeight = 200; // approximate dropdown height
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+  
+      const openUp = spaceBelow < menuApproxHeight && spaceAbove > spaceBelow;
+      const left = Math.min(Math.max(rect.left + rect.width - 220, 8), window.innerWidth - 160); // right-align, keep inside viewport
+      const top = openUp ? rect.top - 8 : rect.bottom + 8;
+  
+      setPosition({ top, left, openUp });
+    };
+  
+    // open/close handlers
+    const toggle = (e?: React.MouseEvent) => {
+      e?.stopPropagation();
+      if (!open) {
+        computePosition();
+        // slight delay to allow computePosition to run before render (not strictly needed)
+        setOpen(true);
+      } else {
+        setOpen(false);
+      }
+    };
+  
+    // close on outside click or escape
+    useEffect(() => {
+      if (!open) return;
+      function onDocClick(e: MouseEvent) {
+        const t = e.target as Node;
+        if (buttonRef.current?.contains(t)) return;
+        if (menuRef.current && !menuRef.current.contains(t)) setOpen(false);
+      }
+      function onEsc(e: KeyboardEvent) {
+        if (e.key === 'Escape') setOpen(false);
+      }
+      function onScrollResize() {
+        // recompute position while open
+        computePosition();
+      }
+      document.addEventListener('click', onDocClick);
+      document.addEventListener('keydown', onEsc);
+      window.addEventListener('scroll', onScrollResize, true); // capture to catch scrolls in containers
+      window.addEventListener('resize', onScrollResize);
+      return () => {
+        document.removeEventListener('click', onDocClick);
+        document.removeEventListener('keydown', onEsc);
+        window.removeEventListener('scroll', onScrollResize, true);
+        window.removeEventListener('resize', onScrollResize);
+      };
+    }, [open]);
+  
+    // ensure position is computed if button moves (e.g., page layout changes)
+    useEffect(() => {
+      if (!open) return;
+      computePosition();
+    }, [open]);
+    // Render button inline and portal the menu to body when open
+    return (
+      <>
+        <button
+          ref={buttonRef}
+          aria-haspopup="true"
+          aria-expanded={open}
+          onClick={toggle}
+          className="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-primary"
+          title="More actions"
+        >
+          <MoreVertical className="w-5 h-5" />
+        </button>
+  
+        {open && position && createPortal(
+          <div
+            ref={menuRef}
+            role="menu"
+            aria-orientation="vertical"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: 'fixed',
+              top: position.openUp ? position.top - 8 : position.top,
+              left: position.left,
+              zIndex: 9999,
+              minWidth: 160
+            }}
+            className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg overflow-hidden"
+          >
+            {/* Add Member (owner only) */}
+            {isGroupOwner(group) && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setOpen(false); setAddMembersGroup(group); }}
+                className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2"
+                role="menuitem"
+              >
+                <UserPlus className="w-4 h-4" />
+                Add Member
+              </button>
+            )}
+  
+            {/* View Members */}
+            <button
+              onClick={(e) => { e.stopPropagation(); setOpen(false); setMembersDialogGroup(group); }}
+              className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2"
+              role="menuitem"
+            >
+              <Eye className="w-4 h-4" />
+              View Members
+            </button>
+  
+            {/* Divider */}
+            <div className="border-t border-gray-100 dark:border-gray-700" />
+  
+            {/* Delete Group (owner only) */}
+            {isGroupOwner(group) && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setOpen(false); setGroupToDelete(group); }}
+                className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 dark:hover:bg-red-700 flex items-center gap-2 text-red-600"
+                role="menuitem"
+              >
+                {/* <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 7h12M9 7v10m6-10v10M10 7V5a1 1 0 011-1h2a1 1 0 011 1v2" />
+                </svg> */}
+                <Trash2 className="w-4 h-4" />
+                Delete Group
+              </button>
+            )}
+          </div>,
+          document.body
+        )}
+      </>
+    );
+  }
+  
+  
   // Get current user from localStorage
   const getCurrentUser = () => {
     const userData = localStorage.getItem("userData");
@@ -114,6 +278,8 @@ export default function Brand() {
     enabled: !!currentUser?._id,
     refetchInterval: 5000, // Refetch every 5 seconds for testing
   });
+
+  
 
   // Poll for new join requests every 30 seconds
   useEffect(() => {
@@ -220,40 +386,6 @@ export default function Brand() {
     },
   });
 
-  const createTaskMutation = useMutation({
-    mutationFn: async (data: CreateTaskFormData) => {
-      const taskData = {
-        ...data,
-        userId: data.assigneeId || currentUser?._id, // Use assignee if provided, otherwise current user
-      };
-      
-      // Remove assigneeId from the data sent to server since we're using userId
-      const { assigneeId, ...serverData } = taskData;
-      
-      console.log('Creating task with data:', serverData);
-      const response = await axios.post('http://localhost:5055/api/tasks', serverData, { withCredentials: true });
-      console.log('Task created successfully:', response.data);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/tasks/user/with-groups', currentUser?._id] });
-      setIsCreateTaskOpen(false);
-      createTaskForm.reset();
-      toast({
-        title: "Success",
-        description: "Task created successfully!",
-      });
-    },
-    onError: (error) => {
-      console.error('Task creation error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create task. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
   // Join request management (for group owners)
   const updateJoinRequestMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
@@ -276,6 +408,43 @@ export default function Brand() {
         variant: "destructive",
       });
     },
+  });
+
+  // Helper: Determine available assignees based on selected group
+  const getAssigneesForGroup = (groupId?: string) => {
+    if (!groupId) return friends.concat(currentUser ? [currentUser] : []); // fallback
+    const group = groups.find(g => g._id === groupId);
+    if (!group) return friends.concat(currentUser ? [currentUser] : []);
+    // group.members may be array of user ids or populated users
+    const memberIds: string[] = Array.isArray((group as any).members) ? (group as any).members.map((m: any) => typeof m === 'string' ? m : m._id) : [];
+    // include owner
+    const ownerId = (group as any).ownerId ? ((isOwnerObject((group as any).ownerId) ? (group as any).ownerId._id : (group as any).ownerId) as string) : undefined;
+    const uniqueIds = Array.from(new Set([...(memberIds || []), ownerId].filter(Boolean))) as string[];
+    const users = uniqueIds.map(id => friends.find(f => f._id === id) || (currentUser && currentUser._id === id ? currentUser : null)).filter(Boolean) as User[];
+    return users;
+    };
+  
+  
+  const createTaskMutation = useMutation({
+  mutationFn: async (data: CreateTaskFormData) => {
+  const taskData = {
+  ...data,
+  userId: data.assigneeId || currentUser?._id,
+  };
+  const { assigneeId, ...serverData } = taskData as any;
+  const response = await axios.post('http://localhost:5055/api/tasks', serverData, { withCredentials: true });
+  return response.data;
+  },
+  onSuccess: () => {
+  queryClient.invalidateQueries({ queryKey: ['/api/tasks/user/with-groups', currentUser?._id] });
+  setIsCreateTaskOpen(false);
+  createTaskForm.reset();
+  toast({ title: 'Success', description: 'Task created successfully!' });
+  },
+  onError: (error) => {
+  console.error('Task creation error:', error);
+  toast({ title: 'Error', description: 'Failed to create task. Please try again.', variant: 'destructive' });
+  },
   });
 
   // User join request management (for users receiving requests)
@@ -311,6 +480,23 @@ export default function Brand() {
       });
     },
   });
+  // Add member mutation - only owner can use this
+  const addMemberMutation = useMutation({
+    mutationFn: async ({ groupId, userId }: { groupId: string; userId: string }) => {
+    const response = await axios.patch(`http://localhost:5055/api/groups/${groupId}/add-member`, { userId }, { withCredentials: true });
+    return response.data;
+    },
+    onSuccess: () => {
+    toast({ title: 'Member added', description: 'Member added to the group.' });
+    queryClient.invalidateQueries({ queryKey: ['/api/groups/user', currentUser?._id] });
+    setAddMembersGroup(null);
+    setSelectedMemberToAdd(null);
+    },
+    onError: (err: any) => {
+    console.error('Failed to add member', err);
+    toast({ title: 'Error', description: 'Failed to add member.', variant: 'destructive' });
+    }
+    });
 
   const markTaskCompleteMutation = useMutation({
     mutationFn: async (taskId: string) => {
@@ -424,7 +610,38 @@ export default function Brand() {
       });
     }
   }, [filteredUserJoinRequests.length, toast]);
-
+  const isGroupOwner = (group: Group) => {
+    const owner = (group as any).ownerId ?? (group as any).owner; // support both shapes
+    if (!owner || !currentUser?._id) return false;
+    if (isOwnerObject(owner)) return owner._id === currentUser._id;
+    if (isOwnerString(owner)) return owner === currentUser._id;
+    // Sometimes owner might be populated as { _id: '...' }
+    if (owner && typeof owner === 'object' && '_id' in owner) return (owner as any)._id === currentUser._id;
+    return false;
+    };
+    
+    
+    // --- New: Delete group mutation ---
+    const deleteGroupMutation = useMutation({
+    mutationFn: async (groupId: string) => {
+    const response = await axios.delete(`http://localhost:5055/api/groups/${groupId}`, { withCredentials: true });
+    return response.data;
+    },
+    onSuccess: () => {
+    toast({ title: 'Group deleted', description: 'The group was deleted successfully.' });
+    queryClient.invalidateQueries({ queryKey: ['/api/groups/user', currentUser?._id] });
+    setGroupToDelete(null);
+    },
+    onError: (err: any) => {
+    console.error('Failed to delete group', err);
+    toast({ title: 'Error', description: 'Failed to delete group.', variant: 'destructive' });
+    }
+    });
+    
+    
+    const confirmDeleteGroup = (groupId: string) => {
+    deleteGroupMutation.mutate(groupId);
+    };
   // Check if user is logged in
   if (!currentUser) {
     return (
@@ -784,7 +1001,7 @@ export default function Brand() {
             ) : (
               <div className="space-y-6">
                 {groups.map((group) => (
-                  <Card key={group._id} className="glass-effect shadow-xl hover:shadow-2xl transition-shadow">
+                  <Card key={group._id} className="glass-effect shadow-xl hover:shadow-2xl transition-shadow overflow-visible">
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center space-x-3">
@@ -794,6 +1011,18 @@ export default function Brand() {
                           <div>
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                               {group.name}
+                                {/* Eye icon: shows tooltip on hover (native title) and opens members dialog on click */}
+                                {/* <Tooltip label="View members">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setMembersDialogGroup(group)}
+                                  aria-label={`View members of ${group.name}`}
+                                  className="rounded-md px-2"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                              </Tooltip> */}
                             </h3>
                             <p className="text-gray-600 dark:text-gray-400">
                               {group.description || 'No description'}
@@ -801,9 +1030,15 @@ export default function Brand() {
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
+                          {isGroupOwner(group)?
                           <Badge className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
                             Owner
                           </Badge>
+                          :
+                          <Badge className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                            Member
+                          </Badge>
+                          }
                           <Button 
                             size="sm" 
                             variant="outline"
@@ -825,6 +1060,32 @@ export default function Brand() {
                             <CheckCircle className="w-4 h-4 mr-1" />
                             View Tasks
                           </Button>
+                          <div className="relative inline-block text-left">
+                          <MenuButton group={group} />
+                        </div>
+                          {/* {isGroupOwner(group) && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setAddMembersGroup(group)}
+                              title="Add member (owner only)"
+                            >
+                              <UserPlus className="w-4 h-4 mr-1" />
+                              Add Member
+                            </Button>
+                          )} */}
+                          {/* NEW: Delete button visible only to the owner */}
+                          {/* {isGroupOwner(group) && (
+                          <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setGroupToDelete(group)}
+                          disabled={deleteGroupMutation.isLoading}
+                          className="text-red-600 hover:bg-red-50 dark:hover:bg-red-900"
+                          >
+                          <Trash2 className="w-4 h-4" />
+                          </Button>
+                          )} */}
                         </div>
                       </div>
                     </CardContent>
@@ -917,9 +1178,90 @@ export default function Brand() {
             )}
           </div>
         )}
+        {/* Delete Confirmation Dialog - NEW */}
+        <Dialog open={!!groupToDelete} onOpenChange={() => setGroupToDelete(null)}>
+        <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+        <DialogTitle>Delete Group?</DialogTitle>
+        </DialogHeader>
+        <div className="p-4">
+        <p className="mb-4">Are you sure you want to delete <strong>{groupToDelete?.name}</strong>? This action cannot be undone.</p>
+        <div className="flex justify-end space-x-3">
+        <Button variant="outline" onClick={() => setGroupToDelete(null)}>Cancel</Button>
+        <Button
+        onClick={() => groupToDelete && confirmDeleteGroup(groupToDelete._id)}
+        className="bg-red-600 text-white"
+        disabled={deleteGroupMutation.isLoading}
+        >
+        {deleteGroupMutation.isLoading ? 'Deleting...' : 'Delete'}
+        </Button>
+        </div>
+        </div>
+        </DialogContent>
+        </Dialog>
 
+        {/* Members View Dialog */}
+        <Dialog open={!!membersDialogGroup} onOpenChange={() => setMembersDialogGroup(null)}>
+        <DialogContent className="sm:max-w-md">
+        <DialogHeader><DialogTitle>Group Members</DialogTitle></DialogHeader>
+        <div className="p-4 space-y-3">
+        <h4 className="font-semibold">{membersDialogGroup?.name}</h4>
+        <p className="text-sm text-gray-500">Members added to this group</p>
+        <div className="space-y-2 pt-2">
+        {membersDialogGroup && ((membersDialogGroup as any).members || []).length === 0 && (
+        <div className="text-sm text-gray-500">No members added yet.</div>
+        )}
+
+
+        {membersDialogGroup && ((membersDialogGroup as any).members || []).map((m: any) => {
+        const id = typeof m === 'string' ? m : (m._id || m.id);
+        const user = friends.find(f => f._id === id) || (currentUser && currentUser._id === id ? currentUser : null);
+        const isOwnerFlag = isGroupOwner(membersDialogGroup) && ((isOwnerString((membersDialogGroup as any).ownerId) ? (membersDialogGroup as any).ownerId === id : (isOwnerObject((membersDialogGroup as any).ownerId) && (membersDialogGroup as any).ownerId._id === id)));
+        return (
+        <div key={id} className="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
+        <div>
+        <div className="font-medium">{user ? `${user.firstName} ${user.lastName}` : id}</div>
+        <div className="text-xs text-gray-500">{user?.email}</div>
+        </div>
+        <div>
+        {isOwnerFlag ? <Badge className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">Owner</Badge> : <Badge className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">Member</Badge>}
+        </div>
+        </div>
+        );
+        })}
+        </div>
+        </div>
+        </DialogContent>
+        </Dialog>
+
+
+        {/* Add Members Dialog (owner-only) */}
+        <Dialog open={!!addMembersGroup} onOpenChange={() => setAddMembersGroup(null)}>
+        <DialogContent className="sm:max-w-md">
+        <DialogHeader><DialogTitle>Add Member</DialogTitle></DialogHeader>
+        <div className="p-4 space-y-4">
+        <p className="text-sm text-gray-500">Select a friend to add to <strong>{addMembersGroup?.name}</strong></p>
+        <Select onValueChange={(val) => setSelectedMemberToAdd(val)}>
+        <SelectTrigger><SelectValue placeholder="Select friend to add" /></SelectTrigger>
+        <SelectContent>
+        {friends.filter(f => f._id !== currentUser?._id && !( (addMembersGroup && ((addMembersGroup as any).members || []).map((x:any)=> typeof x === 'string' ? x : x._id).includes(f._id)))).map(f => (
+        <SelectItem key={f._id} value={f._id}>{f.firstName} {f.lastName} ({f.email})</SelectItem>
+        ))}
+        </SelectContent>
+        </Select>
+
+
+        <div className="flex justify-end space-x-3">
+        <Button variant="outline" onClick={() => { setAddMembersGroup(null); setSelectedMemberToAdd(null); }}>Cancel</Button>
+        <Button onClick={() => addMembersGroup && selectedMemberToAdd && addMemberMutation.mutate({ groupId: addMembersGroup._id, userId: selectedMemberToAdd })} disabled={addMemberMutation.isLoading || !selectedMemberToAdd}>
+        {addMemberMutation.isLoading ? 'Adding...' : 'Add Member'}
+        </Button>
+        </div>
+        </div>
+        </DialogContent>
+        </Dialog>
         {/* Quick Actions Panel */}
-        <Card className="glass-effect shadow-xl">
+        {/* <Card className="glass-effect shadow-xl">
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
@@ -968,7 +1310,7 @@ export default function Brand() {
               </Button>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       {/* Create Group Modal */}
@@ -1415,7 +1757,7 @@ export default function Brand() {
                   </div> */}
                   
                   {/* Show ALL join requests for debugging */}
-                  {userJoinRequests.length > 0 && (
+                  {/* {userJoinRequests.length > 0 && (
                     <div className="bg-green-100 dark:bg-green-900 p-4 rounded-lg mb-4">
                       <h4 className="font-semibold mb-2">ALL Join Requests (Unfiltered):</h4>
                       {userJoinRequests.map((request, index) => (
@@ -1427,7 +1769,7 @@ export default function Brand() {
                         </div>
                       ))}
                     </div>
-                  )}
+                  )} */}
                   
                   {filteredUserJoinRequests.length > 0 ? (
                     filteredUserJoinRequests.map((request) => (
@@ -1436,7 +1778,7 @@ export default function Brand() {
                           <div className="flex items-center space-x-3">
                             <div>
                               <p className="font-medium text-gray-900 dark:text-white">
-                                You were invited to join <span className="font-medium">{request.group?.name || 'Unknown Group'}</span>
+                                You were invited to join <span className="font-medium">{request.groupId?.name || 'Unknown Group'}</span>
                               </p>
                               {request.group?.description && typeof request.group.description === 'string' && (
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -1445,7 +1787,7 @@ export default function Brand() {
                               )}
                               <p className="text-xs text-gray-500 dark:text-gray-400">
                                 Created by: {(() => {
-                                  const owner = request.group?.ownerId;
+                                  const owner = request.groupId?.ownerId;
                                   if (owner && typeof owner === 'object' && owner !== null && 'firstName' in owner) {
                                     const ownerData = owner as { firstName: string; lastName: string };
                                     return `${ownerData.firstName} ${ownerData.lastName}`;

@@ -1,7 +1,7 @@
 // src/context/ActiveScreenContext.tsx
 import { createContext, useContext, useState, ReactNode } from "react";
 
-type Screen = 'search' | 'pending' | 'chat' | 'dashboard' | 'posts' | 'templates' | 'brand' | 'profile';
+type Screen = 'search' | 'pending' | 'chat' | 'dashboard' | 'posts' | 'templates' | 'brand' | 'profile' | 'sprint';
 
 interface ActiveScreenContextType {
   activeScreen: Screen;

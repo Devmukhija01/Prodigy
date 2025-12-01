@@ -156,7 +156,7 @@ export default function Login() {
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome Back</h1>
-            <p className="text-gray-600 dark:text-gray-400">Sign in to your SocialConnect Pro account</p>
+            <p className="text-gray-600 dark:text-gray-400">Sign in to your Prodigy account</p>
           </div>
 
           <Card className="border-0 shadow-xl">
@@ -231,9 +231,9 @@ export default function Login() {
                         Remember me
                       </label>
                     </div>
-                    <Link to="/forgot-password" className="text-sm text-blue-600 hover:text-blue-500">
+                    {/* <Link to="/forgot-password" className="text-sm text-blue-600 hover:text-blue-500">
                       Forgot password?
-                    </Link>
+                    </Link> */}
                   </div>
 
                   <Button

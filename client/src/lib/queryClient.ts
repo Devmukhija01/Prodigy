@@ -33,15 +33,19 @@ export const apiRequest = async (
     },
     body: body ? JSON.stringify(body) : undefined,
     credentials: "include", // if needed for cookies
+    // avoid reusing cached responses as much as possible
+    cache: "no-store",
   });
 
-  if (!response.ok) {
+  // ⬇️ IMPORTANT: don't treat 304 as error
+  if (!response.ok && response.status !== 304) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.message || "API request failed");
   }
 
   return response;
 };
+
 
 
 type UnauthorizedBehavior = "returnNull" | "throw";

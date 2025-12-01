@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 import axios from 'axios';
 import { useAvatar } from '@/hooks/useAvatar';
 
-type Screen = 'search' | 'pending' | 'chat' | 'dashboard' | 'posts' | 'templates' | 'brand' | 'profile';
+type Screen = 'search' | 'pending' | 'chat' | 'dashboard' | 'posts' | 'templates' | 'brand' | 'profile' | 'sprint' | 'friends';
 
 interface SidebarProps {
   activeScreen: string;
@@ -46,11 +46,13 @@ interface User {
 const navigationItems = [
   { id: 'dashboard', label: 'Dashboard', icon: BarChart3, isPrimary: true },
   { id: 'posts', label: 'Tasks', icon: Send, isPrimary: true },
-  { id: 'templates', label: 'Templates', icon: FileText, isPrimary: true },
+  // { id: 'templates', label: 'Templates', icon: FileText, isPrimary: true },
   { id: 'brand', label: 'Groups', icon: Palette, isPrimary: true },
-  { id: 'search', label: 'Find Users', icon: Users, isPrimary: false },
-  { id: 'pending', label: 'Requests', icon: Clock, isPrimary: false },
+  // { id: 'search', label: 'Find Users', icon: Users, isPrimary: false },
+  // { id: 'pending', label: 'Requests', icon: Clock, isPrimary: false },
   { id: 'chat', label: 'Chats', icon: MessageCircle, isPrimary: false },
+  { id: 'sprint', label: 'Sprint', icon: MessageCircle, isPrimary: false },
+  { id: 'friends', label: 'Friends', icon: Users, isPrimary: false },
 ];
 
 export function Sidebar({ activeScreen, onScreenChange, pendingCount = 0, isMobileOpen, onMobileClose }: SidebarProps) {
@@ -95,14 +97,14 @@ export function Sidebar({ activeScreen, onScreenChange, pendingCount = 0, isMobi
       <aside className={cn(
         "fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 lg:flex-shrink-0",
         isMobileOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
+      )} style={{width: "12%"}}>
         <div className="flex flex-col h-full">
           {/* Sidebar Header - Fixed */}
-          <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <div className="flex items-center justify-between h-12 px-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+              {/* <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
                 <MessageCircle className="text-white" size={16} />
-              </div>
+              </div> */}
               <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Prodigy</h1>
             </div>
             {/* Mobile Close Button */}
@@ -201,7 +203,7 @@ export function Sidebar({ activeScreen, onScreenChange, pendingCount = 0, isMobi
           </nav>
 
           {/* Sidebar Footer - Fixed */}
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+          {/* <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
             <div className="flex items-center space-x-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
               {avatarUrl ? (
                 <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white dark:border-gray-600">
@@ -237,7 +239,7 @@ export function Sidebar({ activeScreen, onScreenChange, pendingCount = 0, isMobi
                 <Settings size={16} />
               </Button>
             </div>
-          </div>
+          </div> */}
         </div>
       </aside>
     </>
