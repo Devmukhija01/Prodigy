@@ -10,10 +10,24 @@ import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import user from 'server/routes/user';
 
-const CURRENT_USER_ID = localStorage.getItem("userId");
+// const CURRENT_USER_ID = localStorage.getItem("userId");
  // gives "1"
 
- console.log("🚀 CURRENT_USER_ID =", CURRENT_USER_ID);
+//  console.log("🚀 CURRENT_USER_ID =", CURRENT_USER_ID);
+// Get correct logged-in user ID from localStorage
+const getCurrentUserId = () => {
+  const raw = localStorage.getItem("userData");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw)._id;
+  } catch {
+    return null;
+  }
+};
+
+const CURRENT_USER_ID = getCurrentUserId();
+console.log("🚀 CURRENT_USER_ID =", CURRENT_USER_ID);
+
 
 export const SearchUsers = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,7 +54,7 @@ export const SearchUsers = () => {
   });
 
   const sendRequestMutation = useMutation({
-    mutationFn: async (toUserId: number) => {
+    mutationFn: async (toUserId: string) => {
       // if (!CURRENT_USER_ID) {
       //   toast({
       //     title: "Error",
@@ -59,7 +73,7 @@ export const SearchUsers = () => {
       }
       
       const response = await apiRequest('POST', '/api/friend-requests', {
-        fromUserId: CURRENT_USER_ID,
+        // fromUserId: CURRENT_USER_ID,
         toUserId,
       });
       return response.json();
@@ -86,7 +100,7 @@ export const SearchUsers = () => {
     }
   };
 
-  const handleSendRequest = (userId: number) => {
+  const handleSendRequest = (userId: string) => {
     sendRequestMutation.mutate(userId);
   };
 

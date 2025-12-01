@@ -1,3 +1,5 @@
+import { TeamMember } from "@/lib/types";
+
 import { 
   users, 
   friendRequests, 
@@ -31,6 +33,31 @@ import {
 } from "@shared/schema";
 
 export interface IStorage {
+  getTeamMembers(): Promise<TeamMember[]>;
+  getTeamMember(id: string): Promise<TeamMember | undefined>;
+  createTeamMember(member: InsertTeamMember): Promise<TeamMember>;
+  updateTeamMember(id: string, member: Partial<InsertTeamMember>): Promise<TeamMember>;
+  deleteTeamMember(id: string): Promise<void>;
+
+  // Sprints
+  getSprints(): Promise<Sprint[]>;
+  getSprint(id: string): Promise<Sprint | undefined>;
+  createSprint(sprint: InsertSprint): Promise<Sprint>;
+  updateSprint(id: string, sprint: Partial<InsertSprint>): Promise<Sprint>;
+  deleteSprint(id: string): Promise<void>;
+
+  // Tasks
+  getTasks(): Promise<Task[]>;
+  getTask(id: string): Promise<Task | undefined>;
+  getTasksBySprint(sprintId: string): Promise<Task[]>;
+  createTask(task: InsertTask): Promise<Task>;
+  updateTask(id: string, task: Partial<InsertTask>): Promise<Task>;
+  deleteTask(id: string): Promise<void>;
+
+  // Retrospective Items
+  getRetroItems(sprintId: string): Promise<RetroItem[]>;
+  createRetroItem(item: InsertRetroItem): Promise<RetroItem>;
+  deleteRetroItem(id: string): Promise<void>;
   // User methods
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
@@ -123,7 +150,7 @@ export class MemStorage implements IStorage {
   private currentScheduleId: number;
   private currentTaskId: number;
   private currentGroupId: number;
-
+  
   constructor() {
     this.users = new Map();
     this.friendRequests = new Map();
@@ -620,6 +647,143 @@ export class MemStorage implements IStorage {
 
   async deleteGroup(id: number): Promise<void> {
     this.groups.delete(id);
+  }
+  async getTeamMembers(): Promise<TeamMember[]> {
+    return db.select().from(schema.teamMembers);
+  }
+
+  async getTeamMember(id: string): Promise<TeamMember | undefined> {
+    const [member] = await db
+      .select()
+      .from(schema.teamMembers)
+      .where(eq(schema.teamMembers.id, id))
+      .limit(1);
+    return member;
+  }
+
+  async createTeamMember(member: InsertTeamMember): Promise<TeamMember> {
+    const [created] = await db
+      .insert(schema.teamMembers)
+      .values(member)
+      .returning();
+    return created;
+  }
+
+  async updateTeamMember(
+    id: string,
+    updates: Partial<InsertTeamMember>
+  ): Promise<TeamMember> {
+    const [updated] = await db
+      .update(schema.teamMembers)
+      .set(updates)
+      .where(eq(schema.teamMembers.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTeamMember(id: string): Promise<void> {
+    await db
+      .delete(schema.teamMembers)
+      .where(eq(schema.teamMembers.id, id));
+  }
+
+  async getSprints(): Promise<Sprint[]> {
+    return db.select().from(schema.sprints);
+  }
+
+  async getSprint(id: string): Promise<Sprint | undefined> {
+    const [sprint] = await db
+      .select()
+      .from(schema.sprints)
+      .where(eq(schema.sprints.id, id))
+      .limit(1);
+    return sprint;
+  }
+
+  async createSprint(sprint: InsertSprint): Promise<Sprint> {
+    const [created] = await db
+      .insert(schema.sprints)
+      .values(sprint)
+      .returning();
+    return created;
+  }
+
+  async updateSprint(
+    id: string,
+    updates: Partial<InsertSprint>
+  ): Promise<Sprint> {
+    const [updated] = await db
+      .update(schema.sprints)
+      .set(updates)
+      .where(eq(schema.sprints.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteSprint(id: string): Promise<void> {
+    await db.delete(schema.sprints).where(eq(schema.sprints.id, id));
+  }
+
+  async getTasks(): Promise<Task[]> {
+    return db.select().from(schema.tasks);
+  }
+
+  async getTask(id: string): Promise<Task | undefined> {
+    const [task] = await db
+      .select()
+      .from(schema.tasks)
+      .where(eq(schema.tasks.id, id))
+      .limit(1);
+    return task;
+  }
+
+  async getTasksBySprint(sprintId: string): Promise<Task[]> {
+    return db
+      .select()
+      .from(schema.tasks)
+      .where(eq(schema.tasks.sprintId, sprintId));
+  }
+
+  async createTask(task: InsertTask): Promise<Task> {
+    const [created] = await db
+      .insert(schema.tasks)
+      .values(task)
+      .returning();
+    return created;
+  }
+
+  async updateTask(id: string, updates: Partial<InsertTask>): Promise<Task> {
+    const [updated] = await db
+      .update(schema.tasks)
+      .set(updates)
+      .where(eq(schema.tasks.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTask(id: string): Promise<void> {
+    await db.delete(schema.tasks).where(eq(schema.tasks.id, id));
+  }
+
+  async getRetroItems(sprintId: string): Promise<RetroItem[]> {
+    return db
+      .select()
+      .from(schema.retroItems)
+      .where(eq(schema.retroItems.sprintId, sprintId));
+  }
+
+  async createRetroItem(item: InsertRetroItem): Promise<RetroItem> {
+    const [created] = await db
+      .insert(schema.retroItems)
+      .values(item)
+      .returning();
+    return created;
+  }
+
+  async deleteRetroItem(id: string): Promise<void> {
+    await db
+      .delete(schema.retroItems)
+      .where(eq(schema.retroItems.id, id));
   }
 }
 
