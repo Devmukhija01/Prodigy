@@ -782,6 +782,13 @@ import ChatWindow from "@/components/messenger/ChatWindow";
 import { apiRequest } from "@/lib/queryClient";
 import { useSocket } from "@/hooks/useSocket";
 import { useAuth } from "@/hooks/useAuth";
+import { callManager } from "@/lib/callManager";
+import PreCallScreen from "./messenger/PreCallScreen";
+import FullScreenCall from "./messenger/FullScreenCall";
+import OutgoingCallScreen from "./messenger/OutgoingCallScreen";
+
+// import IncomingCallModal from "./messenger/IncomingCallModal";
+// import FloatingCallWindow from "./messenger/FloatingCallWindow";
 
 type User = {
   _id: string;
@@ -821,6 +828,62 @@ type Message = {
 export function MessengerApp() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const queryClient = useQueryClient();
+
+  const [incomingCall, setIncomingCall] = useState<any>(null);
+  const [inCall, setInCall] = useState(false);
+  const [localStream, setLocalStream] = useState<MediaStream|null>(null);
+  const [remoteStream, setRemoteStream] = useState<MediaStream|null>(null);
+
+  const [showPreCall, setShowPreCall] = useState(false);
+  const [preCallType, setPreCallType] = useState<"audio" | "video">("audio");
+  const [incomingCallerId, setIncomingCallerId] = useState<string | null>(null);
+  const [callMode, setCallMode] = useState<"none" | "outgoing" | "incoming" | "precall">("none");
+
+
+  // useEffect(() => {
+  //   callManager.onIncomingCall = (data) => {
+  //     setIncomingCall(data);
+  //   };
+  
+  //   callManager.onCallConnected = (stream) => {
+  //     setRemoteStream(stream);
+  //     setInCall(true);
+  //   };
+  
+  //   callManager.onCallEnded = () => {
+  //     setInCall(false);
+  //     setIncomingCall(null);
+  //     setLocalStream(null);
+  //     setRemoteStream(null);
+  //   };
+  // }, []);
+
+  useEffect(() => {
+    callManager.onIncomingCall = (data) => {
+      setIncomingCall(data);
+      setPreCallType(data.callType);
+      setIncomingCallerId(data.from);
+      // setShowPreCall(true);  show Teams-style incoming screen
+      setCallMode("incoming");
+    };
+  
+    callManager.onCallConnected = (stream) => {
+      setRemoteStream(stream);
+      setInCall(true);
+      setShowPreCall(false);
+    };
+  
+    callManager.onCallEnded = () => {
+      setInCall(false);
+      setShowPreCall(false);
+      setIncomingCall(null);
+      setIncomingCallerId(null);
+      setLocalStream(null);
+      setRemoteStream(null);
+    };
+  }, []);
+  
+
 
   // Selected chat kept as resolved object { type, data }
   const [selectedChat, setSelectedChat] = useState<{
@@ -1116,7 +1179,57 @@ export function MessengerApp() {
       return "";
     }
   };
-
+  // const handleCallPress = async (type: "audio" | "video") => {
+  //   if (!selectedChat.data || selectedChat.type !== "friend") return;
+  
+  //   const local = await callManager.startCall(selectedChat.data._id, type);
+  //   setLocalStream(local);
+  // };
+  
+  // const handleCallPress = (type: "audio" | "video") => {
+  //   if (!selectedChat.data || selectedChat.type !== "friend") return;
+  
+  //   setPreCallType(type);
+  //   setShowPreCall(true);
+  //   setIncomingCallerId(selectedChat.data._id); // store target user
+  // };
+  const handleCallPress = async (type: "audio" | "video") => {
+    
+    if (!selectedChat.data || selectedChat.type !== "friend") return;
+  
+    setPreCallType(type);
+    // show outgoing screen
+    setCallMode("outgoing");
+    // setPreCallType(type);
+    setIncomingCallerId(selectedChat.data._id);
+  
+    // DO NOT start the call yet — wait 500ms for UI
+    setTimeout(async () => {
+      const local = await callManager.startCall(selectedChat.data._id, type);
+      setLocalStream(local);
+    }, 300);
+  };
+  
+  const joinCall = async () => {
+    if (!incomingCallerId) return;
+  
+    const local = await callManager.startCall(incomingCallerId, preCallType);
+  
+    setLocalStream(local);
+    setShowPreCall(false);
+  };
+  const acceptIncomingCall = async () => {
+    const local = await callManager.acceptCall(
+      incomingCall.from,
+      incomingCall.sdp,
+      incomingCall.callType
+    );
+    setPreCallType(incomingCall.callType);
+    setLocalStream(local);
+    setShowPreCall(false);
+    setIncomingCall(null);
+  };
+  
   const getInitials = (name = "") =>
     (name || "").split(" ").map((n: string) => (n ? n[0] : "")).join("").toUpperCase();
 
@@ -1159,8 +1272,111 @@ export function MessengerApp() {
           onBack={() => setShowMobileChat(false)}
           showBackButton={showMobileChat}
           messagesEndRef={messagesEndRef}
+          onCallPress={handleCallPress}
         />
       </div>
+
+      {/* {incomingCall && !inCall && (
+      <IncomingCallModal
+        caller={incomingCall}
+        onAccept={async () => {
+          const local = await callManager.acceptCall(
+            incomingCall.from,
+            incomingCall.sdp,
+            incomingCall.callType
+          );
+          setLocalStream(local);
+          setIncomingCall(null);
+        }}
+        onReject={() => {
+          callManager.endCall();
+          setIncomingCall(null);
+        }}
+      />
+    )}
+      {inCall && (
+    <FloatingCallWindow
+      local={localStream}
+      remote={remoteStream}
+      onEnd={() => callManager.endCall()}
+    />
+  )} */}
+
+  {/* Pre-call (outgoing OR incoming) */}
+{/* {showPreCall && (
+  <PreCallScreen
+    callType={preCallType}
+    onJoin={incomingCall ? acceptIncomingCall : joinCall}
+    onCancel={() => {
+      callManager.endCall();
+      setShowPreCall(false);
+      setIncomingCall(null);
+    }}
+  />
+)} */}
+
+{/* Full-screen in-call UI */}
+{/* {inCall && (
+  <FullScreenCall
+    local={localStream}
+    remote={remoteStream}
+    onEnd={() => callManager.endCall()}
+  />
+)} */}
+{/* OUTGOING CALL SCREEN */}
+{callMode === "outgoing" && (
+  <OutgoingCallScreen
+    callType={preCallType}
+    calleeName={
+      selectedChat.data?.firstName
+        ? `${selectedChat.data.firstName} ${selectedChat.data.lastName ?? ""}`
+        : "User"
+    }
+    onCancel={() => {
+      callManager.endCall();
+      setCallMode("none");
+    }}
+  />
+)}
+
+{/* INCOMING CALL PREVIEW */}
+{callMode === "incoming" && (
+  <PreCallScreen
+    callType={preCallType}
+    onJoin={async () => {
+      const local = await callManager.acceptCall(
+        incomingCall.from,
+        incomingCall.sdp,
+        incomingCall.callType
+      );
+      setPreCallType(incomingCall.callType);
+      setLocalStream(local);
+      setCallMode("none");
+    }}
+    onCancel={() => {
+      callManager.endCall();
+      setCallMode("none");
+      setIncomingCall(null);
+    }}
+  />
+)}
+
+{/* FULL SCREEN CALL (ACTIVE) */}
+{inCall && (
+  <FullScreenCall
+    local={localStream}
+    remote={remoteStream}
+    callType={preCallType}   
+    onEnd={() => {
+      callManager.endCall();
+      setCallMode("none");
+      setLocalStream(null);
+      setRemoteStream(null);
+    }}
+  />
+)}
+
+
     </div>
   );
 }

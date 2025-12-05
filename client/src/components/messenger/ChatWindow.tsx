@@ -181,6 +181,7 @@ export interface ChatWindowProps {
   onBack?: () => void;
   showBackButton?: boolean;
   messagesEndRef?: React.RefObject<HTMLDivElement | null>;
+  onCallPress?: (type: "audio" | "video") => void;
 }
 
 const getInitials = (name = "") => {
@@ -221,6 +222,7 @@ export function ChatWindow({
   onBack,
   showBackButton = false,
   messagesEndRef,
+  onCallPress
 }: ChatWindowProps) {
   const [draft, setDraft] = useState("");
 
@@ -255,6 +257,8 @@ export function ChatWindow({
     setDraft("");
   };
 
+  
+
   return (
     <div className="flex flex-col h-full min-h-0">
       <ChatHeader
@@ -262,6 +266,7 @@ export function ChatWindow({
         chat={chat ?? null}
         showBackButton={showBackButton}
         onBack={onBack}
+        onCallPress={onCallPress} 
       />
 
       <div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">

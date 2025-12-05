@@ -119,7 +119,7 @@
   // export default ChatHeader;
 // src/components/messenger/ChatHeader.tsx
 import React from "react";
-import { ArrowLeft, MoreVertical, Search } from "lucide-react";
+import { ArrowLeft, MoreVertical, Phone, Search, Video } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -150,7 +150,7 @@ export type ResolvedChat = { type: "friend" | "group"; data: Friend | Group } | 
 export interface ChatHeaderProps {
   // preferred: full resolved chat object
   chat?: ResolvedChat;
-
+  onCallPress?: (type: "audio" | "video") => void;
   // alternative simpler props (ChatWindow might send these)
   name?: string | null;
   avatar?: string | null;
@@ -193,6 +193,7 @@ export function ChatHeader(props: ChatHeaderProps) {
     showBackButton = false,
     className = "",
     "data-testid": dataTestId,
+    onCallPress,
   } = props;
 
   // Debug: show what we got (remove or lower-level log in prod)
@@ -279,6 +280,7 @@ export function ChatHeader(props: ChatHeaderProps) {
   const [imgError, setImgError] = React.useState(false);
   React.useEffect(() => setImgError(false), [avatarSrc]);
 
+  
   return (
     <div
       className={`h-16 px-4 flex items-center justify-between gap-4 border-b bg-background ${className}`}
@@ -319,6 +321,23 @@ export function ChatHeader(props: ChatHeaderProps) {
         <Button size="icon" variant="ghost" aria-label="Search messages">
           <Search className="h-4 w-4" />
         </Button>
+        <Button
+        size="icon"
+        variant="ghost"
+        aria-label="Audio Call"
+        onClick={() => onCallPress?.("audio")}
+      >
+        <Phone className="h-4 w-4" />
+      </Button>
+
+      {/* <Button
+        size="icon"
+        variant="ghost"
+        aria-label="Video Call"
+        onClick={() => onCallPress?.("video")}
+      >
+        <Video className="h-4 w-4" />
+      </Button> */}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

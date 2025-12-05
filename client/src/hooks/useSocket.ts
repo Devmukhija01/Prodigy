@@ -74,7 +74,7 @@
 // client/src/hooks/useSocket.ts
 import { useEffect, useState, useRef } from "react";
 import { io, Socket } from "socket.io-client";
-
+import { callManager } from "@/lib/callManager";
 interface WsMessage {
   _id?: string;
   groupId?: string;
@@ -141,6 +141,11 @@ export function useSocket(userId: string) {
       socketRef.current = null;
     };
   }, [userId]);
+  
+useEffect(() => {
+  if (!socketRef.current) return;
+  callManager.initSocket(socketRef.current);
+}, [socketRef.current]);
 
   const sendMessage = (toId: string, content: string, isGroup?: boolean) => {
     if (!socketRef.current) return;
