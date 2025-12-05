@@ -1,4 +1,4 @@
-// Toast.tsx — Redesigned toast with success/error variants and 4s auto-close
+// components/ui/toast.tsx
 import * as React from "react";
 import * as ToastPrimitives from "@radix-ui/react-toast";
 import { cva, type VariantProps } from "class-variance-authority";
@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 
 const ToastProvider = ToastPrimitives.Provider;
 
-// Viewport: bottom-right on desktop, bottom on mobile
 const ToastViewport = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Viewport>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport>
@@ -24,18 +23,27 @@ const ToastViewport = React.forwardRef<
 ));
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName;
 
-// variants: success (green accent on white card), error (red accent on white card), default (neutral)
+/**
+ * Base toast card. We added:
+ *  - rounded-2xl + shadow for polish
+ *  - relative so the left accent and progress can be absolutely positioned
+ *  - pl-4 (left padding) to make room for the left accent
+ *  - --toast-duration CSS variable populated from the `duration` prop below
+ */
 const toastVariants = cva(
-  "group pointer-events-auto relative flex w-full items-start gap-4 overflow-hidden rounded-lg border p-4 pr-10 shadow-lg transition-all data-[state=open]:animate-in data-[state=closed]:animate-out",
+  "group pointer-events-auto relative flex w-full items-start gap-4 overflow-visible rounded-xl p-4 pr-10 shadow-lg transition-all data-[state=open]:animate-in data-[state=closed]:animate-out",
   {
     variants: {
       variant: {
-        default: "bg-white border-gray-100 text-slate-900",
-        success: "bg-white border-green-100 text-slate-900",
-        error: "bg-white border-red-100 text-slate-900",
-        destructive: "bg-white border-red-100 text-slate-900",
+        default: "bg-white text-slate-900",
+
+        // FULL GREEN SUCCESS TOAST
+        success: "bg-green-50 text-black font-600",
+
+        // FULL RED ERROR TOAST
+        error: "bg-red-50 text-white",
+        destructive: "bg-red-50 text-white",
       },
-      // optional size / severity etc can be added later
     },
     defaultVariants: {
       variant: "default",
@@ -43,16 +51,21 @@ const toastVariants = cva(
   }
 );
 
+
+
 type ToastRootProps = React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> & VariantProps<typeof toastVariants>;
 
-// Root: default duration 4000ms
 const Toast = React.forwardRef<React.ElementRef<typeof ToastPrimitives.Root>, ToastRootProps>(
-  ({ className, variant = "default", duration = 4000, ...props }, ref) => {
+  ({ className, variant = "default", duration = 3000, style, ...props }, ref) => {
+    // expose the duration to CSS so the progress bar animation matches the toast duration
+    const styleWithDuration = { ...style, ["--toast-duration" as any]: `${duration}ms` } as React.CSSProperties;
+
     return (
       <ToastPrimitives.Root
         ref={ref}
         className={cn(toastVariants({ variant }), className)}
         duration={duration}
+        style={styleWithDuration}
         {...props}
       />
     );
@@ -60,31 +73,28 @@ const Toast = React.forwardRef<React.ElementRef<typeof ToastPrimitives.Root>, To
 );
 Toast.displayName = ToastPrimitives.Root.displayName;
 
-// Left accent / icon wrapper
+/** Left accent strip (thin vertical bar) so the toast reads as colored even on white card */
 const ToastAccent = ({ variant }: { variant?: string }) => {
-  const base = "flex h-9 w-9 shrink-0 items-center justify-center rounded-md";
-  if (variant === "success") {
-    return (
-      <div className={cn(base, "bg-green-50 border border-green-100")}>
-        <CheckCircle className="h-5 w-5 text-green-600" />
-      </div>
-    );
-  }
-  if (variant === "error" || variant === "destructive") {
-    return (
-      <div className={cn(base, "bg-red-50 border border-red-100")}>
-        <AlertCircle className="h-5 w-5 text-red-600" />
-      </div>
-    );
-  }
+  const color =
+    variant === "success"
+      ? "bg-green-500"
+      : variant === "error" || variant === "destructive"
+      ? "bg-red-500"
+      : "bg-slate-400";
+
   return (
-    <div className={cn(base, "bg-slate-50 border border-slate-100")}>
-      <CheckCircle className="h-5 w-5 text-slate-500" />
-    </div>
+    // absolute vertical bar on the left; rounded on top/bottom to match card
+    <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl ${color} opacity-95`} aria-hidden />
   );
 };
 
-// Action (optional) — keeps previous API shape
+const ToastIcon = ({ variant }: { variant?: string }) => {
+  if (variant === "success") return <CheckCircle className="h-5 w-5 text-green-600" />;
+  if (variant === "error" || variant === "destructive") return <AlertCircle className="h-5 w-5 text-red-600" />;
+  return <CheckCircle className="h-5 w-5 text-slate-500" />;
+};
+
+// Action (same API)
 const ToastAction = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Action>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Action>
@@ -92,7 +102,7 @@ const ToastAction = React.forwardRef<
   <ToastPrimitives.Action
     ref={ref}
     className={cn(
-      "inline-flex h-8 items-center justify-center rounded-md border px-3 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2",
+      "inline-flex h-8 items-center justify-center rounded-md border px-3 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2",
       className
     )}
     {...props}
@@ -108,7 +118,7 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      "absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:text-slate-900 focus:outline-none focus:ring-2",
+      "absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2",
       className
     )}
     {...props}
@@ -122,7 +132,7 @@ const ToastTitle = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Title>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Title>
 >(({ className, ...props }, ref) => (
-  <ToastPrimitives.Title ref={ref} className={cn("text-sm font-semibold", className)} {...props} />
+  <ToastPrimitives.Title ref={ref} className={cn("text-sm font-semibold leading-tight", className)} {...props} />
 ));
 ToastTitle.displayName = ToastPrimitives.Title.displayName;
 
@@ -134,7 +144,18 @@ const ToastDescription = React.forwardRef<
 ));
 ToastDescription.displayName = ToastPrimitives.Description.displayName;
 
-// A small wrapper component that renders icon + content, exposes same props as Root
+/** Progress bar matching the variant color. Uses --toast-duration for animation length */
+const ToastProgress = ({ variant }: { variant?: string }) => {
+  const bg =
+    variant === "success" ? "bg-green-500" : variant === "error" || variant === "destructive" ? "bg-red-500" : "bg-slate-400";
+
+  return (
+    <div className="absolute left-0 bottom-0 h-1 w-full overflow-hidden rounded-b-2xl">
+      <div className={`progress-bar h-full transform origin-left ${bg}`} aria-hidden />
+    </div>
+  );
+};
+
 export type ToastProps = React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> & VariantProps<typeof toastVariants>;
 
 export {
@@ -145,4 +166,7 @@ export {
   ToastDescription,
   ToastClose,
   ToastAction,
+  ToastAccent,
+  ToastIcon,
+  ToastProgress,
 };

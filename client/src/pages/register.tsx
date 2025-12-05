@@ -89,25 +89,25 @@ const onSubmit = async (data: FormData) => {
 ;
 
   return (
-    <div className="min-h-screen flex">
+    <div className="h-screen flex overflow-hidden">
       {/* Left Section - Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-gray-900 dark:to-gray-800">
-        <div className="w-full max-w-md space-y-8">
+      <div className="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="w-full max-w-md space-y-4">
           <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Create Account</h1>
             <p className="text-gray-600 dark:text-gray-400">Join Prodigy and start managing your Tasks & Sprints</p>
           </div>
 
           <Card className="border-0 shadow-xl">
-            <CardHeader className="text-center pb-4">
+            <CardHeader className="text-center pb-3">
               <CardTitle className="text-2xl font-semibold">Sign Up</CardTitle>
               <CardDescription>
                 Create your account to get started
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="py-3">
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -117,10 +117,10 @@ const onSubmit = async (data: FormData) => {
                           <FormLabel className="text-gray-700 dark:text-gray-300">First Name</FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                              <User className="absolute left-2 top-2 h-3 w-3 text-gray-400 mt-1" />
                               <Input
                                 placeholder="First name"
-                                className="pl-10 h-12 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                                className="pl-8 h-9 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
                                 {...field}
                               />
                             </div>
@@ -138,10 +138,10 @@ const onSubmit = async (data: FormData) => {
                           <FormLabel className="text-gray-700 dark:text-gray-300">Last Name</FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                              <User className="absolute left-2 top-2 h-3 w-3 text-gray-400 mt-1" />
                               <Input
                                 placeholder="Last name"
-                                className="pl-10 h-12 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                                className="pl-8 h-9 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
                                 {...field}
                               />
                             </div>
@@ -160,10 +160,10 @@ const onSubmit = async (data: FormData) => {
                         <FormLabel className="text-gray-700 dark:text-gray-300">Email Address</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                            <Mail className="absolute left-2 top-2 h-3 w-3 text-gray-400 mt-1" />
                             <Input
                               placeholder="Enter your email"
-                              className="pl-10 h-12 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                              className="pl-8 h-9 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
                               {...field}
                             />
                           </div>
@@ -181,16 +181,16 @@ const onSubmit = async (data: FormData) => {
                         <FormLabel className="text-gray-700 dark:text-gray-300">Password</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                            <Lock className="absolute left-2 top-2 h-3 w-3 text-gray-400 mt-1" />
                             <Input
                               type={showPassword ? "text" : "password"}
                               placeholder="Create a password"
-                              className="pl-10 pr-10 h-12 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                              className="pl-8 pr-8 h-9 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
                               {...field}
                             />
                             <button
                               type="button"
-                              className="absolute right-3 top-3 h-4 w-4 text-gray-400 hover:text-gray-600"
+                              className="absolute right-2 top-2 h-3 w-3 text-gray-400 hover:text-gray-600"
                               onClick={() => setShowPassword(!showPassword)}
                             >
                               {showPassword ? <EyeOff /> : <Eye />}
@@ -210,16 +210,16 @@ const onSubmit = async (data: FormData) => {
                         <FormLabel className="text-gray-700 dark:text-gray-300">Confirm Password</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                            <Lock className="absolute left-2 top-2 h-3 w-3 text-gray-400 mt-1" />
                             <Input
                               type={showConfirmPassword ? "text" : "password"}
                               placeholder="Confirm your password"
-                              className="pl-10 pr-10 h-12 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                              className="pl-8 pr-8 h-9 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
                               {...field}
                             />
                             <button
                               type="button"
-                              className="absolute right-3 top-3 h-4 w-4 text-gray-400 hover:text-gray-600"
+                              className="absolute right-2 top-2 h-3 w-3 text-gray-400 hover:text-gray-600"
                               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             >
                               {showConfirmPassword ? <EyeOff /> : <Eye />}
@@ -236,7 +236,7 @@ const onSubmit = async (data: FormData) => {
                       id="agree-terms"
                       name="agree-terms"
                       type="checkbox"
-                      className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                      className="h-3 w-3 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
                       required
                     />
                     <label htmlFor="agree-terms" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
@@ -254,7 +254,7 @@ const onSubmit = async (data: FormData) => {
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full h-12 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold"
+                    className="w-full h-8 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold"
                   >
                     {isLoading ? (
                       <div className="flex items-center">

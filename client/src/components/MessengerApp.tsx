@@ -375,15 +375,413 @@
 
 
 // MessengerApp.tsx — cleaned and fixed
-import React, { useState, useEffect, useRef } from "react";
-import { ChatSidebar } from "@/components/messenger/ChatSidebar";
-import { ChatWindow } from "@/components/messenger/ChatWindow";
+// import React, { useState, useEffect, useRef } from "react";
+// import { ChatSidebar } from "@/components/messenger/ChatSidebar";
+// import { ChatWindow } from "@/components/messenger/ChatWindow";
+// import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+// import { apiRequest } from "@/lib/queryClient";
+// import { useSocket } from "@/hooks/useSocket";
+// import { useAuth } from "@/hooks/useAuth";
+// import { Button } from "@/components/ui/button";
+// import { Send } from "lucide-react";
+
+// type User = {
+//   _id: string;
+//   firstName?: string;
+//   lastName?: string;
+//   avatar?: string;
+//   lastMessage?: string;
+//   timestamp?: string;
+//   unreadCount?: number;
+//   isOnline?: boolean;
+// };
+
+// type Group = {
+//   _id: string;
+//   name?: string;
+//   avatar?: string;
+//   lastMessage?: string;
+//   timestamp?: string;
+//   unreadCount?: number;
+// };
+
+// type Message = {
+//   _id?: string;
+//   fromUserId?: string;
+//   toUserId?: string;
+//   groupId?: string;
+//   content?: string;
+//   timestamp?: string | Date;
+//   event?: string;
+//   friend?: any;
+// };
+
+// export function MessengerApp() {
+//   const { user, isAuthenticated, isLoading } = useAuth();
+//   const queryClient = useQueryClient();
+
+//   const [selectedChat, setSelectedChat] = useState<{
+//     type: "friend" | "group" | null;
+//     data: User | Group | null;
+//   }>({ type: null, data: null });
+//   const [messageInput, setMessageInput] = useState("");
+//   const [chatMessages, setChatMessages] = useState<Message[]>([]);
+//   const [showMobileChat, setShowMobileChat] = useState(false);
+//   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+//   // socket provides incremental messages/events
+//   const {
+//     messages: wsMessages = [],
+//     userStatuses = new Map<string, boolean>(),
+//     sendMessage: sendWebSocketMessage,
+//   } = useSocket(user?._id || "");
+
+//   // ---------- queries ----------
+//   const { data: friends = [] } = useQuery({
+//     queryKey: ["/api/friend-requests/accepted", user?._id],
+//     queryFn: async () => {
+//       const res = await apiRequest("GET", `/api/friend-requests/accepted/${user?._id}`);
+//       return res.json();
+//     },
+//     enabled: !!user?._id,
+//   });
+
+//   // ---------- robust groups query: try multiple endpoints and normalize result ----------
+//   const { data: groups = [], status: groupsStatus } = useQuery({
+//     queryKey: ["/api/groups/accepted", user?._id, "robust"],
+//     queryFn: async () => {
+//       if (!user?._id) return [];
+
+//       const userId = user._id;
+//       // candidate endpoints to try in order
+//       const candidates = [
+//         `/api/groups/accepted/${userId}`, // original
+//         `/api/groups/user/${userId}`,
+//         `/api/users/${userId}/groups`,
+//         `/api/groups/member-of/${userId}`,
+//         `/api/groups/mine/${userId}`,
+//       ];
+
+//       const errors: any[] = [];
+
+//       // helper wrapper that uses your apiRequest function and returns parsed JSON
+//       const tryFetch = async (url: string) => {
+//         try {
+//           const res = await apiRequest("GET", url);
+//           if (res && typeof (res as any).json === "function") {
+//             const json = await (res as Response).json();
+//             return { ok: true, json };
+//           }
+//           return { ok: true, json: res };
+//         } catch (err) {
+//           return { ok: false, err };
+//         }
+//       };
+
+//       for (const url of candidates) {
+//         const r = await tryFetch(url);
+//         if (!r.ok) {
+//           errors.push({ url, error: String(r.err) });
+//           continue;
+//         }
+
+//         const json = r.json;
+//         // Accept either an array or an object with `.data` array
+//         if (Array.isArray(json)) {
+//           console.info(`[groups] loaded from ${url}`);
+//           return json;
+//         }
+//         if (json && Array.isArray(json.data)) {
+//           console.info(`[groups] loaded from ${url} (data wrapper)`);
+//           return json.data;
+//         }
+
+//         // Not expected shape
+//         errors.push({ url, reason: "unexpected-shape", payload: json });
+//       }
+
+//       console.error("[groups] none of the candidate endpoints returned a groups array:", errors);
+//       return []; // graceful fallback
+//     },
+//     enabled: !!user?._id,
+//     staleTime: 30_000,
+//   });
+
+//   // quick debug logs (can remove later)
+//   useEffect(() => {
+//     console.debug("DEBUG friends:", friends);
+//   }, [friends]);
+//   useEffect(() => {
+//     console.debug("DEBUG groups:", groups, "status:", groupsStatus);
+//     if (groupsStatus !== "idle" && groupsStatus !== "loading" && Array.isArray(groups) && groups.length === 0) {
+//       console.warn("Groups list is empty — check backend endpoint or the candidate endpoints tried. See console for details.");
+//     }
+//   }, [groups, groupsStatus]);
+
+//   // ---------- normalize lists for UI (ensure _id exists and names are present) ----------
+//   const friendsList = (friends || []).map((f: any) => ({
+//     _id: f._id ?? f.id,
+//     firstName: f.firstName ?? f.first_name ?? (typeof f.name === "string" ? f.name.split(" ")[0] : ""),
+//     lastName: f.lastName ?? f.last_name ?? (typeof f.name === "string" ? f.name.split(" ").slice(1).join(" ") : ""),
+//     avatar: f.avatar ?? f.picture,
+//     lastMessage: f.lastMessage ?? f.last_message,
+//     timestamp: f.timestamp,
+//     unreadCount: f.unreadCount ?? f.unread_count,
+//     isOnline: f.isOnline ?? f.online,
+//   }));
+
+//   const groupsList = (groups || []).map((g: any) => ({
+//     _id: g._id ?? g.id,
+//     name: g.name ?? g.title ?? g.groupName ?? "",
+//     avatar: g.avatar ?? g.picture,
+//     lastMessage: g.lastMessage ?? g.last_message,
+//     timestamp: g.timestamp,
+//     unreadCount: g.unreadCount ?? g.unread_count,
+//   }));
+
+//   const { data: messagesData = [] } = useQuery({
+//     queryKey: ["/api/messages", selectedChat.type, (selectedChat.data as any)?._id],
+//     queryFn: async () => {
+//       if (!selectedChat.data) return [];
+//       if (selectedChat.type === "friend") {
+//         const friend = selectedChat.data as User;
+//         const res = await apiRequest("GET", `/api/messages/${friend._id}`);
+//         return res.json();
+//       } else {
+//         const group = selectedChat.data as Group;
+//         const res = await apiRequest("GET", `/api/messages/group/${group._id}`);
+//         return res.json();
+//       }
+//     },
+//     enabled: !!selectedChat.data && !!user?._id,
+//   });
+
+//   // ---------- dedupe refs for WS processing ----------
+//   const processedWsIdsRef = useRef<Set<string>>(new Set());
+//   const processedWsIndexRef = useRef<number>(0);
+
+//   // ---------- sync server messages -> local state (guarded by fingerprint) ----------
+//   const lastMessagesDataFingerprintRef = useRef<string | null>(null);
+//   useEffect(() => {
+//     try {
+//       const len = (messagesData && messagesData.length) || 0;
+//       const firstId = len > 0 ? String((messagesData[0] as any)?._id || "") : "";
+//       const lastId = len > 0 ? String((messagesData[len - 1] as any)?._id || "") : "";
+//       const fingerprint = `${len}:${firstId}:${lastId}`;
+
+//       if (lastMessagesDataFingerprintRef.current !== fingerprint) {
+//         lastMessagesDataFingerprintRef.current = fingerprint;
+//         setChatMessages(messagesData as Message[]);
+//       }
+//     } catch (err) {
+//       lastMessagesDataFingerprintRef.current = `fallback:${Date.now()}`;
+//       setChatMessages(messagesData as Message[]);
+//     }
+//   }, [messagesData]);
+
+//   // ---------- process wsMessages once each (dedupe) and append relevant messages ----------
+//   useEffect(() => {
+//     if (!wsMessages || wsMessages.length === 0) return;
+//     if (!selectedChat.data || !user?._id) return;
+
+//     const startIndex = processedWsIndexRef.current || 0;
+//     const newItems: Message[] = [];
+
+//     for (let i = startIndex; i < wsMessages.length; i++) {
+//       const ev: any = wsMessages[i];
+//       if (!ev) {
+//         processedWsIndexRef.current = i + 1;
+//         continue;
+//       }
+
+//       const evId =
+//         ev._id ||
+//         ev.id ||
+//         ev.eventId ||
+//         JSON.stringify({
+//           from: ev.fromUserId,
+//           to: ev.toUserId,
+//           g: ev.groupId,
+//           c: ev.content,
+//           t: ev.timestamp,
+//         });
+
+//       if (processedWsIdsRef.current.has(String(evId))) {
+//         processedWsIndexRef.current = i + 1;
+//         continue;
+//       }
+
+//       processedWsIdsRef.current.add(String(evId));
+
+//       if (ev.event === "friend-accepted" || ev.type === "friend-request-accepted" || ev.event === "friendAccepted") {
+//         processedWsIndexRef.current = i + 1;
+//         continue;
+//       }
+
+//       const looksLikeMessage = ev.content && (ev.fromUserId || ev.groupId || ev.toUserId);
+//       if (!looksLikeMessage) {
+//         processedWsIndexRef.current = i + 1;
+//         continue;
+//       }
+
+//       const belongsToSelected =
+//         selectedChat.type === "friend"
+//           ? ((String(ev.fromUserId) === String((selectedChat.data as User)._id) && String(ev.toUserId) === String(user._id)) ||
+//               (String(ev.fromUserId) === String(user._id) && String(ev.toUserId) === String((selectedChat.data as User)._id)))
+//           : String(ev.groupId) === String((selectedChat.data as Group)._id);
+
+//       if (belongsToSelected) newItems.push(ev as Message);
+
+//       processedWsIndexRef.current = i + 1;
+//     }
+
+//     if (newItems.length === 0) return;
+
+//     setChatMessages((prev) => {
+//       const existing = new Set(prev.map((m) => String(m._id || (m.content || "") + String(m.timestamp || ""))));
+//       const toAdd = newItems.filter((m) => !existing.has(String(m._id || (m.content || "") + String(m.timestamp || ""))));
+//       if (toAdd.length === 0) return prev;
+//       return [...prev, ...toAdd];
+//     });
+//   }, [wsMessages, selectedChat, user?._id]);
+
+//   // ---------- send message (optimistic) and persist ----------
+//   const sendMessageMutation = useMutation({
+//     mutationFn: async (payload: { content: string }) => {
+//       if (!user?._id || !selectedChat.data) return null;
+//       const content = payload.content;
+//       if (selectedChat.type === "friend") {
+//         const friend = selectedChat.data as User;
+//         sendWebSocketMessage(friend._id, content);
+//         const res = await apiRequest("POST", "/api/messages", {
+//           fromUserId: user._id,
+//           toUserId: friend._id,
+//           content,
+//         });
+//         return res.json();
+//       } else {
+//         const group = selectedChat.data as Group;
+//         sendWebSocketMessage(group._id, content, true);
+//         const res = await apiRequest("POST", "/api/messages/group", {
+//           fromUserId: user._id,
+//           groupId: group._id,
+//           content,
+//         });
+//         return res.json();
+//       }
+//     },
+//     onSuccess: (message: any) => {
+//       if (!message) return;
+//       setChatMessages((prev) => {
+//         const exists = prev.find((m) => m._id && message._id && String(m._id) === String(message._id));
+//         if (exists) return prev;
+//         return [...prev, message];
+//       });
+//       queryClient.invalidateQueries({
+//         queryKey: ["/api/messages", selectedChat.type, (selectedChat.data as any)?._id],
+//       });
+//     },
+//   });
+
+//   const handleSendMessage = (overrideText?: string) => {
+//     const text = (overrideText ?? messageInput).trim();
+//     if (!text || !selectedChat.data) return;
+
+//     const temp: Message = {
+//       _id: `temp-${Date.now()}`,
+//       fromUserId: user._id,
+//       content: text,
+//       timestamp: new Date().toISOString(),
+//       toUserId: selectedChat.type === "friend" ? (selectedChat.data as User)._id : undefined,
+//       groupId: selectedChat.type === "group" ? (selectedChat.data as Group)._id : undefined,
+//     };
+
+//     setChatMessages((prev) => [...prev, temp]);
+//     setMessageInput("");
+//     sendMessageMutation.mutate({ content: text });
+//   };
+
+//   // scroll to bottom when chatMessages length changes
+//   useEffect(() => {
+//     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+//   }, [chatMessages.length]);
+
+//   // ---------- selection handler passed to Sidebar ----------
+//   const handleSidebarSelect = (id: string, type: "friend" | "group") => {
+//     if (type === "friend") {
+//       const friend = friendsList.find((f) => String(f._id) === String(id));
+//       if (!friend) {
+//         console.warn("Selected friend not found:", id);
+//         return;
+//       }
+//       setSelectedChat({ type: "friend", data: friend });
+//       setShowMobileChat(true);
+//       processedWsIndexRef.current = 0;
+//     } else {
+//       const group = groupsList.find((g) => String(g._id) === String(id));
+//       if (!group) {
+//         console.warn("Selected group not found:", id);
+//         return;
+//       }
+//       setSelectedChat({ type: "group", data: group });
+//       setShowMobileChat(true);
+//       processedWsIndexRef.current = 0;
+//     }
+//   };
+
+//   if (isLoading) return <div className="text-center p-8">Loading chat...</div>;
+//   if (!isAuthenticated || !user?._id) return <div className="text-center p-8">Please log in to use chat.</div>;
+
+//   return (
+//     <div className="h-screen flex bg-background overflow-hidden">
+//       <div
+//         className={`
+//           w-full lg:w-72 lg:border-r border-border flex-shrink-0
+//           ${showMobileChat ? "hidden lg:flex" : "flex"}
+//           flex-col
+//           max-h-screen overflow-y-auto
+//         `}
+//       >
+//         <ChatSidebar
+//           friends={friendsList}
+//           groups={groupsList}
+//           selectedChatId={(selectedChat.data as any)?._id}
+//           onSelectChat={handleSidebarSelect}
+//         />
+//       </div>
+
+//       <div
+//         className={`
+//           flex-1 flex flex-col min-w-0
+//           ${showMobileChat ? "flex" : "hidden lg:flex"}
+//           max-h-screen overflow-y-auto
+//         `}
+//       >
+//         <ChatWindow
+//           chat={selectedChat.data ? { type: selectedChat.type, data: selectedChat.data } : null}
+//           messages={chatMessages}
+//           currentUserId={user._id}
+//           onSendMessage={(c?: string) => handleSendMessage(c)}
+//           onBack={() => setShowMobileChat(false)}
+//           showBackButton={showMobileChat}
+//           messagesEndRef={messagesEndRef}
+//         />
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
+
+// src/components/messenger/MessengerApp.tsx
+import React, { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ChatSidebar } from "@/components/messenger/ChatSidebar";
+import ChatWindow from "@/components/messenger/ChatWindow";
 import { apiRequest } from "@/lib/queryClient";
 import { useSocket } from "@/hooks/useSocket";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Send } from "lucide-react";
 
 type User = {
   _id: string;
@@ -394,6 +792,8 @@ type User = {
   timestamp?: string;
   unreadCount?: number;
   isOnline?: boolean;
+  // backend shape variations may include id / name / picture etc.
+  [k: string]: any;
 };
 
 type Group = {
@@ -403,6 +803,7 @@ type Group = {
   lastMessage?: string;
   timestamp?: string;
   unreadCount?: number;
+  [k: string]: any;
 };
 
 type Message = {
@@ -414,30 +815,33 @@ type Message = {
   timestamp?: string | Date;
   event?: string;
   friend?: any;
+  [k: string]: any;
 };
 
 export function MessengerApp() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const queryClient = useQueryClient();
 
+  // Selected chat kept as resolved object { type, data }
   const [selectedChat, setSelectedChat] = useState<{
     type: "friend" | "group" | null;
     data: User | Group | null;
   }>({ type: null, data: null });
+
   const [messageInput, setMessageInput] = useState("");
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [showMobileChat, setShowMobileChat] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  // socket provides incremental messages/events
+  // Socket provides incremental messages/events + userStatuses + sendMessage
   const {
     messages: wsMessages = [],
     userStatuses = new Map<string, boolean>(),
     sendMessage: sendWebSocketMessage,
   } = useSocket(user?._id || "");
 
-  // ---------- queries ----------
-  const { data: friends = [] } = useQuery({
+  // ---------- API queries ----------
+  const { data: rawFriends = [] } = useQuery({
     queryKey: ["/api/friend-requests/accepted", user?._id],
     queryFn: async () => {
       const res = await apiRequest("GET", `/api/friend-requests/accepted/${user?._id}`);
@@ -446,80 +850,47 @@ export function MessengerApp() {
     enabled: !!user?._id,
   });
 
-  // ---------- robust groups query: try multiple endpoints and normalize result ----------
-  const { data: groups = [], status: groupsStatus } = useQuery({
+  // robust groups query: attempt multiple candidate endpoints (graceful fallback)
+  const { data: rawGroups = [] } = useQuery({
     queryKey: ["/api/groups/accepted", user?._id, "robust"],
     queryFn: async () => {
       if (!user?._id) return [];
-
       const userId = user._id;
-      // candidate endpoints to try in order
       const candidates = [
-        `/api/groups/accepted/${userId}`, // original
+        `/api/groups/accepted/${userId}`,
         `/api/groups/user/${userId}`,
         `/api/users/${userId}/groups`,
         `/api/groups/member-of/${userId}`,
         `/api/groups/mine/${userId}`,
       ];
 
-      const errors: any[] = [];
-
-      // helper wrapper that uses your apiRequest function and returns parsed JSON
       const tryFetch = async (url: string) => {
         try {
           const res = await apiRequest("GET", url);
+          // apiRequest may return a Response or parsed JSON — handle both
           if (res && typeof (res as any).json === "function") {
-            const json = await (res as Response).json();
-            return { ok: true, json };
+            return await (res as Response).json();
           }
-          return { ok: true, json: res };
+          return res;
         } catch (err) {
-          return { ok: false, err };
+          return null;
         }
       };
 
       for (const url of candidates) {
-        const r = await tryFetch(url);
-        if (!r.ok) {
-          errors.push({ url, error: String(r.err) });
-          continue;
-        }
-
-        const json = r.json;
-        // Accept either an array or an object with `.data` array
-        if (Array.isArray(json)) {
-          console.info(`[groups] loaded from ${url}`);
-          return json;
-        }
-        if (json && Array.isArray(json.data)) {
-          console.info(`[groups] loaded from ${url} (data wrapper)`);
-          return json.data;
-        }
-
-        // Not expected shape
-        errors.push({ url, reason: "unexpected-shape", payload: json });
+        const json = await tryFetch(url);
+        if (!json) continue;
+        if (Array.isArray(json)) return json;
+        if (json && Array.isArray((json as any).data)) return (json as any).data;
       }
-
-      console.error("[groups] none of the candidate endpoints returned a groups array:", errors);
-      return []; // graceful fallback
+      return [];
     },
     enabled: !!user?._id,
     staleTime: 30_000,
   });
 
-  // quick debug logs (can remove later)
-  useEffect(() => {
-    console.debug("DEBUG friends:", friends);
-  }, [friends]);
-  useEffect(() => {
-    console.debug("DEBUG groups:", groups, "status:", groupsStatus);
-    if (groupsStatus !== "idle" && groupsStatus !== "loading" && Array.isArray(groups) && groups.length === 0) {
-      console.warn("Groups list is empty — check backend endpoint or the candidate endpoints tried. See console for details.");
-    }
-  }, [groups, groupsStatus]);
-
-  // ---------- normalize lists for UI (ensure _id exists and names are present) ----------
-  const friendsList = (friends || []).map((f: any) => ({
+  // ---------- normalize lists for UI ----------
+  const friendsList: User[] = (rawFriends || []).map((f: any) => ({
     _id: f._id ?? f.id,
     firstName: f.firstName ?? f.first_name ?? (typeof f.name === "string" ? f.name.split(" ")[0] : ""),
     lastName: f.lastName ?? f.last_name ?? (typeof f.name === "string" ? f.name.split(" ").slice(1).join(" ") : ""),
@@ -528,17 +899,20 @@ export function MessengerApp() {
     timestamp: f.timestamp,
     unreadCount: f.unreadCount ?? f.unread_count,
     isOnline: f.isOnline ?? f.online,
+    ...f,
   }));
 
-  const groupsList = (groups || []).map((g: any) => ({
+  const groupsList: Group[] = (rawGroups || []).map((g: any) => ({
     _id: g._id ?? g.id,
     name: g.name ?? g.title ?? g.groupName ?? "",
     avatar: g.avatar ?? g.picture,
     lastMessage: g.lastMessage ?? g.last_message,
     timestamp: g.timestamp,
     unreadCount: g.unreadCount ?? g.unread_count,
+    ...g,
   }));
 
+  // ---------- messages for selected chat ----------
   const { data: messagesData = [] } = useQuery({
     queryKey: ["/api/messages", selectedChat.type, (selectedChat.data as any)?._id],
     queryFn: async () => {
@@ -556,11 +930,11 @@ export function MessengerApp() {
     enabled: !!selectedChat.data && !!user?._id,
   });
 
-  // ---------- dedupe refs for WS processing ----------
+  // ---------- refs for dedupe ----------
   const processedWsIdsRef = useRef<Set<string>>(new Set());
   const processedWsIndexRef = useRef<number>(0);
 
-  // ---------- sync server messages -> local state (guarded by fingerprint) ----------
+  // ---------- sync server messages into local state (fingerprint guarded) ----------
   const lastMessagesDataFingerprintRef = useRef<string | null>(null);
   useEffect(() => {
     try {
@@ -613,6 +987,7 @@ export function MessengerApp() {
 
       processedWsIdsRef.current.add(String(evId));
 
+      // ignore friend-accepted style events here (they are handled elsewhere)
       if (ev.event === "friend-accepted" || ev.type === "friend-request-accepted" || ev.event === "friendAccepted") {
         processedWsIndexRef.current = i + 1;
         continue;
@@ -645,14 +1020,16 @@ export function MessengerApp() {
     });
   }, [wsMessages, selectedChat, user?._id]);
 
-  // ---------- send message (optimistic) and persist ----------
+  // ---------- send message (optimistic) ----------
   const sendMessageMutation = useMutation({
     mutationFn: async (payload: { content: string }) => {
       if (!user?._id || !selectedChat.data) return null;
       const content = payload.content;
       if (selectedChat.type === "friend") {
         const friend = selectedChat.data as User;
+        // real-time
         sendWebSocketMessage(friend._id, content);
+        // persist
         const res = await apiRequest("POST", "/api/messages", {
           fromUserId: user._id,
           toUserId: friend._id,
@@ -685,7 +1062,7 @@ export function MessengerApp() {
 
   const handleSendMessage = (overrideText?: string) => {
     const text = (overrideText ?? messageInput).trim();
-    if (!text || !selectedChat.data) return;
+    if (!text || !selectedChat.data || !user?._id) return;
 
     const temp: Message = {
       _id: `temp-${Date.now()}`,
@@ -701,12 +1078,12 @@ export function MessengerApp() {
     sendMessageMutation.mutate({ content: text });
   };
 
-  // scroll to bottom when chatMessages length changes
+  // scroll to bottom when messages array length changes
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages.length]);
 
-  // ---------- selection handler passed to Sidebar ----------
+  // ---------- sidebar selection handler ----------
   const handleSidebarSelect = (id: string, type: "friend" | "group") => {
     if (type === "friend") {
       const friend = friendsList.find((f) => String(f._id) === String(id));
@@ -716,6 +1093,7 @@ export function MessengerApp() {
       }
       setSelectedChat({ type: "friend", data: friend });
       setShowMobileChat(true);
+      // reset ws processing to include subsequent messages for newly selected chat
       processedWsIndexRef.current = 0;
     } else {
       const group = groupsList.find((g) => String(g._id) === String(id));
@@ -729,11 +1107,26 @@ export function MessengerApp() {
     }
   };
 
+  // ---------- helpers ----------
+  const formatTime = (date?: string | Date) => {
+    if (!date) return "";
+    try {
+      return new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    } catch {
+      return "";
+    }
+  };
+
+  const getInitials = (name = "") =>
+    (name || "").split(" ").map((n: string) => (n ? n[0] : "")).join("").toUpperCase();
+
+  // early returns
   if (isLoading) return <div className="text-center p-8">Loading chat...</div>;
   if (!isAuthenticated || !user?._id) return <div className="text-center p-8">Please log in to use chat.</div>;
 
   return (
     <div className="h-screen flex bg-background overflow-hidden">
+      {/* Sidebar */}
       <div
         className={`
           w-full lg:w-72 lg:border-r border-border flex-shrink-0
@@ -750,6 +1143,7 @@ export function MessengerApp() {
         />
       </div>
 
+      {/* Chat Window */}
       <div
         className={`
           flex-1 flex flex-col min-w-0
@@ -758,7 +1152,7 @@ export function MessengerApp() {
         `}
       >
         <ChatWindow
-          chat={selectedChat.data ? { type: selectedChat.type, data: selectedChat.data } : null}
+          chat={selectedChat.data ? { type: selectedChat.type as "friend" | "group", data: selectedChat.data } : null}
           messages={chatMessages}
           currentUserId={user._id}
           onSendMessage={(c?: string) => handleSendMessage(c)}
@@ -770,3 +1164,5 @@ export function MessengerApp() {
     </div>
   );
 }
+
+export default MessengerApp;
