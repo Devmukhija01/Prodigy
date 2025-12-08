@@ -8,7 +8,7 @@ import Login from "@/pages/login";
 import Register from "@/pages/register";
 import NotFound from "@/pages/not-found";
 import { ProtectedRoute } from "../../server/routes/ProtectedRoute";
-import { useAuth } from "../../server/context/Authcontext";
+import { useAuth } from "./context/Authcontext";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Profile from "./pages/Profile";
 function Router() {
