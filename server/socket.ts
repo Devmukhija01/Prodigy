@@ -38,6 +38,23 @@ export function setupSocketServer(httpServer: HTTPServer) {
       console.log(`❌ Socket ${socket.id} (user ${userId}) disconnected`);
       connectedUsers.delete(socket.id);
     });
+
+    socket.on("call:offer", (data) => {
+      io.to(data.to).emit("call:offer", data);
+    });
+    
+    socket.on("call:answer", (data) => {
+      io.to(data.to).emit("call:answer", data);
+    });
+    
+    socket.on("call:candidate", (data) => {
+      io.to(data.to).emit("call:candidate", data);
+    });
+    
+    socket.on("call:end", (data) => {
+      io.to(data.to).emit("call:end", data);
+    });
+    
   });
 
   return io;

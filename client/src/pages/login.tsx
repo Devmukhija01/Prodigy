@@ -135,7 +135,8 @@ export default function Login() {
   
       toast({
         title: "Login Successful 🎉",
-        description: "Welcome to SocialConnect Pro!",
+        description: "Welcome to Prodigy!",
+        variant: 'success',
       });
   
     } catch (err: any) {

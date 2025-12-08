@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 import axios from 'axios';
 import { useAvatar } from '@/hooks/useAvatar';
 
-type Screen = 'search' | 'pending' | 'chat' | 'dashboard' | 'posts' | 'templates' | 'brand' | 'profile' | 'sprint' | 'friends';
+type Screen = 'search' | 'pending' | 'chat' | 'dashboard' | 'posts' | 'templates' | 'brand' | 'profile' | 'sprint' | 'friends' | 'NewMessage';
 
 interface SidebarProps {
   activeScreen: string;
@@ -50,9 +50,10 @@ const navigationItems = [
   { id: 'brand', label: 'Groups', icon: Palette, isPrimary: true },
   // { id: 'search', label: 'Find Users', icon: Users, isPrimary: false },
   // { id: 'pending', label: 'Requests', icon: Clock, isPrimary: false },
-  { id: 'chat', label: 'Chats', icon: MessageCircle, isPrimary: false },
+  // { id: 'chat', label: 'Chats', icon: MessageCircle, isPrimary: false },
   { id: 'sprint', label: 'Sprint', icon: MessageCircle, isPrimary: false },
   { id: 'friends', label: 'Friends', icon: Users, isPrimary: false },
+  {id: 'NewMessage', label: 'Chats', icon: MessageCircle, isPrimary: false },
 ];
 
 export function Sidebar({ activeScreen, onScreenChange, pendingCount = 0, isMobileOpen, onMobileClose }: SidebarProps) {
