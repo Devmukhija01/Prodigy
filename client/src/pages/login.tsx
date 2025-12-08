@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
 import axios from "axios";
 import { toast } from "@/hooks/use-toast";
-import { useAuth } from "../../../server/context/Authcontext"; 
+import { useAuth } from "../context/Authcontext"; 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),

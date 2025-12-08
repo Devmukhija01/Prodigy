@@ -4,7 +4,7 @@ import App from "./App";
 import "./index.css";
 import React from "react";
 import { BrowserRouter } from "react-router-dom";
-import { AuthProvider } from "../../server/context/Authcontext"; // ✅
+import { AuthProvider } from "./context/Authcontext"; // ✅
 import { ActiveScreenProvider } from "../src/ActiveScreenContext";
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
