@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "module": "esnext",
+    "target": "es2019",
+    "outDir": "dist",
+    "rootDir": ".",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": false,
+    "resolveJsonModule": true,
+    "skipLibCheck": true
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["dist", "node_modules"]
+}

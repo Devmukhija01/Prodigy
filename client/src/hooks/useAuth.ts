@@ -38,7 +38,7 @@ export const useAuth = (): AuthContextType => {
   const login = async (email: string, password: string) => {
     try {
       await axios.post(
-        "http://localhost:5055/api/auth/login",
+        "http://localhost:5055/api/login",
         { email, password },
         { withCredentials: true }
       );
@@ -56,7 +56,7 @@ export const useAuth = (): AuthContextType => {
 
   const logout = async () => {
     try {
-      await axios.post("http://localhost:5055/api/auth/logout", {}, { withCredentials: true });
+      await axios.post("http://localhost:5055/api/logout", {}, { withCredentials: true });
     } catch (err) {
       console.error("Logout failed:", err);
     } finally {
