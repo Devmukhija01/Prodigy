@@ -49,7 +49,17 @@ const taskSchema = new mongoose.Schema({
   priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' },
   dueDate: Date,
   createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  updatedAt: { type: Date, default: Date.now },
+  tags:[String],
+  subtasks:[{
+    title:String,
+    completed:{type:Boolean,default:false}
+  }],
+  attachments:[{
+    name:String,
+    url:String,
+    type:{type:String}
+  }]
 });
 
 export const Task = mongoose.model('Task', taskSchema);
