@@ -9,15 +9,18 @@ import {
   MessageCircle,
   Settings,
   X,
-  User
+  User,
+  icons,
+  Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import axios from 'axios';
 import { useAvatar } from '@/hooks/useAvatar';
+import { Label } from 'recharts';
 
-type Screen = 'search' | 'pending' | 'chat' | 'dashboard' | 'posts' | 'templates' | 'brand' | 'profile' | 'sprint' | 'friends' | 'NewMessage';
+type Screen = 'search' | 'pending' | 'chat' | 'dashboard' | 'posts' | 'templates' | 'brand' | 'profile' | 'sprint' | 'friends' | 'NewMessage' | 'Feedback-Contact';
 
 interface SidebarProps {
   activeScreen: string;
@@ -54,6 +57,7 @@ const navigationItems = [
   { id: 'sprint', label: 'Sprint', icon: MessageCircle, isPrimary: false },
   { id: 'friends', label: 'Friends', icon: Users, isPrimary: false },
   {id: 'NewMessage', label: 'Chats', icon: MessageCircle, isPrimary: false },
+  {id: 'Feedback-Contact', label:'Contact Us', icon:Eye, isPrimary: false},
 ];
 
 export function Sidebar({ activeScreen, onScreenChange, pendingCount = 0, isMobileOpen, onMobileClose }: SidebarProps) {

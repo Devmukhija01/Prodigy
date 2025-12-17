@@ -3,10 +3,16 @@ import jwt from "jsonwebtoken";
 
 interface JwtPayload {
   id: string;
+  email: string;
+  fullName: string;
 }
 
 export interface AuthenticatedRequest extends Request {
-  user?: { id: string };
+  user?: {
+     id: string 
+     email: string;
+     fullName: string;
+    };
 }
 
 export const requireAuth = (
@@ -19,7 +25,11 @@ export const requireAuth = (
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
-    req.user = { id: decoded.id };
+    req.user = {
+      id: decoded.id,
+      email: decoded.email,
+      fullName: decoded.fullName,
+    };
     next();
   } catch (err) {
     return res.status(401).json({ message: "Invalid token" });
