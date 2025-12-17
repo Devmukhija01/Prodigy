@@ -8,6 +8,17 @@ export const insertUserSchema = z.object({
   avatar: z.string().optional(),
 });
 
+export const subTaskSchema=z.object({
+  title:z.string().min(1),
+  completed:z.boolean().default(false)
+});
+
+export const attachmentSchema=z.object({
+  name:z.string(),
+  url:z.string(),
+  type:z.string()
+});
+
 export const insertFriendRequestSchema = z.object({
   fromUserId: z.string(),
   toUserId: z.string(),
@@ -71,6 +82,9 @@ export const insertTaskSchema = z.object({
     }
     return val;
   }),
+  subtasks:z.array(subTaskSchema).optional(),
+  attachments:z.array(attachmentSchema).optional(),
+  tags:z.array(z.string()).optional()
 });
 
 export const insertGroupSchema = z.object({
@@ -202,6 +216,9 @@ export type Task = {
   dueDate?: Date;
   createdAt: Date;
   updatedAt: Date;
+  subtasks?:{_id:string;title:string;completed:boolean}[];
+  attachments?:{_id:string;name:string;url:string;type:string}[];
+  tags?:string[];
 };
 
 export type InsertTask = z.infer<typeof insertTaskSchema>;
