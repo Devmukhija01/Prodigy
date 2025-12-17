@@ -95,6 +95,7 @@ import { useActiveScreen } from '../ActiveScreenContext';
 import Sprint from './Sprint';
 import { Footer } from '@/components/Footer';
 import FriendsManagement from './FriendsManagement';
+import FeedbackContact from './FeedbackContact';
 import { MessengerApp } from '@/components/MessengerApp';
 import TutorialSystem from '@/components/tutorial/TutorialSystem';
 import type { TutorialStep } from '@/components/tutorial/TutorialSystem';
@@ -171,11 +172,13 @@ export default function Home() {
       case 'profile':
         return <Profile />;
       case 'sprint':
-        return <Sprint />;
+        return <Sprint />; 
       case 'friends':
         return <FriendsManagement />;
       case 'NewMessage':
         return <MessengerApp />;
+      case 'Feedback-Contact':
+        return <FeedbackContact/>;
       default:
         return <Dashboard />;
     }
@@ -224,7 +227,7 @@ export default function Home() {
         <Header onMobileMenuToggle={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)} />
   
         {/* Main content - only this scrolls */}
-        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8">
           {renderActiveScreen()}
         </main>
         {/* <Footer /> */}

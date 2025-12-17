@@ -44,7 +44,7 @@ export const login = async (req: Request, res: Response) => {
     if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
 
     // ✅ Create JWT token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user._id,    email: user.email,fullName: user.firstName + user.lastName, }, process.env.JWT_SECRET!, { expiresIn: '7d' });
 
     // ✅ Set cookie
     res.cookie("token", token, {
