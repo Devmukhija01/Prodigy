@@ -452,7 +452,7 @@ export default function FeedbackContact() {
                         <div className="h-24 w-24 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mb-4 ring-8 ring-emerald-50/50 animate-pulse">
                           <CheckCircle2 className="h-12 w-12" />
                         </div>
-                        <h2 className="text-3xl font-heading font-bold text-primary">Feedback Received!</h2>
+                        <h2 className="text-3xl font-heading font-bold text-primary">Feedback Sent!</h2>
                         <p className="text-muted-foreground max-w-md text-lg">
                           Thank you for helping us improve.
                         </p>
