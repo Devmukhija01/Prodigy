@@ -9,15 +9,18 @@ import {
   MessageCircle,
   Settings,
   X,
-  User
+  User,
+  icons,
+  Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import axios from 'axios';
 import { useAvatar } from '@/hooks/useAvatar';
+import { Label } from 'recharts';
 
-type Screen = 'search' | 'pending' | 'chat' | 'dashboard' | 'posts' | 'templates' | 'brand' | 'profile' | 'sprint' | 'friends' | 'NewMessage';
+type Screen = 'search' | 'pending' | 'chat' | 'dashboard' | 'posts' | 'templates' | 'brand' | 'profile' | 'sprint' | 'friends' | 'NewMessage' | 'Feedback-Contact';
 
 interface SidebarProps {
   activeScreen: string;
@@ -54,6 +57,7 @@ const navigationItems = [
   { id: 'sprint', label: 'Sprint', icon: MessageCircle, isPrimary: false },
   { id: 'friends', label: 'Friends', icon: Users, isPrimary: false },
   {id: 'NewMessage', label: 'Chats', icon: MessageCircle, isPrimary: false },
+  {id: 'Feedback-Contact', label:'Contact Us', icon:Eye, isPrimary: false},
 ];
 
 export function Sidebar({ activeScreen, onScreenChange, pendingCount = 0, isMobileOpen, onMobileClose }: SidebarProps) {
@@ -98,7 +102,7 @@ export function Sidebar({ activeScreen, onScreenChange, pendingCount = 0, isMobi
       <aside className={cn(
         "fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 lg:flex-shrink-0",
         isMobileOpen ? "translate-x-0" : "-translate-x-full"
-      )} style={{width: "12%"}}>
+      )} style={{width: "12%"}} id='tutorial-sidebar'>
         <div className="flex flex-col h-full">
           {/* Sidebar Header - Fixed */}
           <div className="flex items-center justify-between h-12 px-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">

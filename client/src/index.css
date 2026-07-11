@@ -243,3 +243,63 @@
   }
 }
 
+/* Card / Tooltip Container */
+.tour-card, 
+.shepherd-content, 
+.joyride-tooltip, 
+.driver-popover {
+  background: #1f1f27 !important; /* Dark card */
+  color: #e5e5e5 !important;
+  border-radius: 12px !important;
+  border: 1px solid #3a3a46 !important;
+}
+
+/* Title */
+.tour-card .title,
+.shepherd-title,
+.joyride-title {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+/* Description */
+.tour-card .description,
+.shepherd-text,
+.joyride-tooltip__main {
+  color: #c7c7d1 !important;
+}
+
+/* Next / Back Buttons */
+.tour-card button,
+.shepherd-button,
+.joyride-tooltip__button--primary {
+  background: #6366f1 !important; /* Indigo */
+  color: white !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+}
+
+.joyride-tooltip__button--secondary,
+.shepherd-button-secondary {
+  background: transparent !important;
+  color: #a0a0b3 !important;
+}
+
+/* Step Counter */
+.tour-card .step-counter,
+.joyride-tooltip__counter {
+  background: #2e2e3a !important;
+  color: white !important;
+}
+
+/* Close Icon */
+.tour-card .close-btn,
+.shepherd-cancel-icon,
+.joyride-tooltip__close {
+  color: #a0a0b3 !important;
+}
+[data-testid="tutorial-tooltip"] {
+  background: #ffffff !important;  /* Pure white */
+  backdrop-filter: none !important; /* Remove blur if it makes it look dark */
+  -webkit-backdrop-filter: none !important;
+}

@@ -3,8 +3,110 @@ import { z } from 'zod';
 import { requireAuth, AuthenticatedRequest } from '../Middleware/auth';
 import { Task, Group } from '../models/User';
 import { insertTaskSchema } from '@shared/schema';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
 const router = express.Router();
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(process.cwd(), 'uploads', 'attachments');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'att-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 } 
+});
+
+//  1. Upload Attachment Endpoint
+router.post('/:id/attachments', requireAuth, upload.single('file'), async (req: AuthenticatedRequest, res) => {
+  try {
+    const taskId = req.params.id;
+    if (!req.file) return res.status(400).json({ message: "No file uploaded" });
+
+    const task = await Task.findById(taskId);
+    if (!task) return res.status(404).json({ message: "Task not found" });
+
+    // Construct URL
+    const fileUrl = `http://localhost:5055/uploads/attachments/${req.file.filename}`;
+    
+    const newAttachment = {
+      name: req.file.originalname,
+      type: req.file.mimetype,
+      url: fileUrl
+    };
+
+    // Add to task
+    task.attachments = task.attachments || [];
+    task.attachments.push(newAttachment);
+    await task.save();
+
+    res.json(task); // Return updated task
+  } catch (error) {
+    console.error("Attachment upload error:", error);
+    res.status(500).json({ message: "Upload failed" });
+  }
+});
+
+// 2. Create Task (Updated to handle tags/subtasks if sent initially)
+router.post('/', requireAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    const body = insertTaskSchema.parse(req.body);
+    
+    if (body.userId !== req.user?.id) {
+      return res.status(403).json({ message: "Access denied." });
+    }
+    
+    const task = new Task(body);
+    await task.save();
+    res.json(task);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: "Invalid data", errors: error.errors });
+    }
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// 3. Update Task (Handles Subtasks, Tags, Status)
+router.patch('/:id', requireAuth, async (req: AuthenticatedRequest, res) => {
+  try {
+    const id = req.params.id;
+    const updates = req.body;
+    
+    const task = await Task.findById(id);
+    if (!task) return res.status(404).json({ message: "Task not found" });
+    
+    // Security check
+    if (req.user?.id !== task.userId.toString()) {
+      // Allow if user is in the group (optional logic, keeping strict for now)
+      return res.status(403).json({ message: "Access denied." });
+    }
+    
+    // Mongoose handles the partial update automatically
+    const updatedTask = await Task.findByIdAndUpdate(
+      id, 
+      { ...updates, updatedAt: new Date() }, 
+      { new: true } // Return the updated document
+    );
+    
+    res.json(updatedTask);
+  } catch (error) {
+    console.error('Update task error:', error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 
 // Create a new task
 router.post('/', requireAuth, async (req: AuthenticatedRequest, res) => {

@@ -2101,32 +2101,45 @@ const editTaskMutation = useMutation({
     if (!title.trim()) return;
     const task = (currentTasks || []).find(t => t._id === taskId);
     if (!task) return;
-    const newSub = { id: Math.random().toString(36).substr(2, 9), title: title.trim(), completed: false };
-    const updated = [...(task.subtasks || []), newSub];
-    editTaskMutation.mutate({ id: taskId, data: { subtasks: updated } });
+    const newSub = { title:title.trim(),completed:false};
+    const updatedSubtasks = [...(task.subtasks || []), newSub];
+    editTaskMutation.mutate({ id: taskId, data: { subtasks: updatedSubtasks as any } });
   };
 
   const toggleSubtask = (taskId: string, subtaskId: string) => {
     const task = (currentTasks || []).find(t => t._id === taskId);
     if (!task) return;
-    const updated = (task.subtasks || []).map(st => st.id === subtaskId ? { ...st, completed: !st.completed } : st);
-    editTaskMutation.mutate({ id: taskId, data: { subtasks: updated } });
+    const updatedSubtasks = (task.subtasks || []).map(st => (st._id || st.id) === subtaskId ? { ...st, completed: !st.completed } : st);
+    editTaskMutation.mutate({ id: taskId, data: { subtasks: updatedSubtasks } });
   };
 
   const deleteSubtask = (taskId: string, subtaskId: string) => {
     const task = (currentTasks || []).find(t => t._id === taskId);
     if (!task) return;
-    const updated = (task.subtasks || []).filter(st => st.id !== subtaskId);
-    editTaskMutation.mutate({ id: taskId, data: { subtasks: updated } });
+    const updatedSubtasks = (task.subtasks || []).filter(st => st._id !== subtaskId);
+    editTaskMutation.mutate({ id: taskId, data: { subtasks: updatedSubtasks } });
   };
 
-  const addAttachment = (taskId: string, file: File) => {
-    const task = (currentTasks || []).find(t => t._id === taskId);
-    if (!task) return;
-    const url = URL.createObjectURL(file); // local preview - adjust if uploading to server
-    const att = { id: Math.random().toString(36).substr(2, 9), name: file.name, type: file.type, url };
-    const updated = [...(task.attachments || []), att];
-    editTaskMutation.mutate({ id: taskId, data: { attachments: updated } });
+  const addAttachment = async (taskId: string, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      await axios.post(`http://localhost:5055/api/tasks/${taskId}/attachments`, formData, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      toast({ title: "Success", description: "Attachment uploaded!" });
+      
+      // Refresh UI
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks/user/personal', currentUserId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks/user/team', currentUserId] });
+      
+    } catch (error) {
+      console.error("Upload failed", error);
+      toast({ title: "Error", description: "Failed to upload attachment", variant: "destructive" });
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -2571,7 +2584,7 @@ function TaskCard({
               {totalSubtasks > 0 && !showDetails && <div className="h-1 w-full bg-muted rounded-full overflow-hidden mt-1"><div className="h-full bg-primary/80 transition-all" style={{ width: `${progress}%` }} /></div>}
 
               {showDetails && (
-                <div className="pt-3 mt-3 border-t border-dashed border-border/60 space-y-4">
+                <div className="pt-3 mt-3 border-t border-dashed border-border/60 space-y-4 animate-in slide-in-from-top-1 duration-200">
                   {task.description && <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded-md">{task.description}</div>}
 
                   <div className="space-y-2">
@@ -2580,16 +2593,46 @@ function TaskCard({
                       <span className="text-[10px] text-muted-foreground">{progress}%</span>
                     </div>
                     <Progress value={progress} className="h-1.5" />
+
                     <div className="space-y-1.5 mt-2">
-                      {(task.subtasks || []).map(st => (
-                        <div key={st.id} className="flex items-center gap-2 group/item">
-                          <button onClick={() => onToggleSubtask(task._id, st.id)} className={cn("flex-shrink-0 h-4 w-4 rounded border flex items-center justify-center transition-all", st.completed ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/40 hover:border-primary")}>
-                            {st.completed && <CheckCircle className="w-3 h-3" />}
-                          </button>
-                          <span className={cn("text-xs leading-tight flex-1", st.completed ? "text-muted-foreground line-through" : "text-foreground")}>{st.title}</span>
-                          <button onClick={() => onDeleteSubtask(task._id, st.id)} className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-destructive/10 hover:text-destructive rounded transition-all"><X className="w-3 h-3" /></button>
-                        </div>
-                      ))}
+                       {task.subtasks?.map(st => {
+                          // ✅ Robust ID check
+                          const subtaskId = st._id || st.id;
+                          
+                          return (
+                            <div key={subtaskId} className="flex items-center gap-2 group/item">
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation(); // 🛑 Prevent card click
+                                  onToggleSubtask(task._id, subtaskId);
+                                }}
+                                className={cn(
+                                  "flex-shrink-0 h-4 w-4 rounded border flex items-center justify-center transition-all",
+                                  st.completed 
+                                    ? "bg-primary border-primary text-primary-foreground" 
+                                    : "border-muted-foreground/40 hover:border-primary"
+                                )}
+                              >
+                                {st.completed && <CheckCircle className="w-3 h-3" />}
+                              </button>
+                              <span className={cn(
+                                "text-xs leading-tight transition-all flex-1", 
+                                st.completed ? "text-muted-foreground line-through decoration-border" : "text-foreground"
+                              )}>
+                                {st.title}
+                              </span>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation(); // 🛑 Prevent card click
+                                  onDeleteSubtask(task._id, subtaskId);
+                                }}
+                                className="opacity-0 group-hover/item:opacity-100 p-1 hover:bg-destructive/10 hover:text-destructive rounded transition-all"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          );
+                        })}
                     </div>
 
                     <div className="relative">

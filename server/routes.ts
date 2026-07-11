@@ -394,11 +394,13 @@
 // }
 import express from 'express';
 import { register, login} from './controllers/authController';
+import feedbackRoutes from './routes/feedback.routes';
 
 const router = express.Router();
 
 router.post('/register', register);
 router.post('/login', login);
+
 router.post("/logout", (req, res) => {
     res.clearCookie("token", {
       httpOnly: true,
@@ -407,4 +409,5 @@ router.post("/logout", (req, res) => {
     });
     res.json({ message: "Logged out successfully" });
   });
+router.use("/feedback", feedbackRoutes);
 export default router;

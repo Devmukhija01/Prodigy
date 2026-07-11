@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 
 interface AuthContextType {
   token: string | null;
+  isLoading:boolean;
   login: (token: string) => void;
   logout: () => void;
 }
@@ -11,12 +12,14 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [token, setToken] = useState<string | null>(null);
+  const [isLoading,setIsLoading] = useState(true);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("auth_token");
     if (storedToken) {
       setToken(storedToken);
     }
+    setIsLoading(false);
   }, []);
 
   const login = (newToken: string) => {
@@ -30,7 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ token, login, logout }}>
+    <AuthContext.Provider value={{ token, isLoading ,login, logout }}>
       {children}
     </AuthContext.Provider>
   );

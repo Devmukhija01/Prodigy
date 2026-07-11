@@ -14,6 +14,7 @@ import weatherRoutes from "./routes/weather";
 import tasksRoutes from "./routes/tasks";
 import groupsRoutes from "./routes/groups";
 import joinRequestsRoutes from "./routes/join-requests";
+import feedbackRoutes from "./routes/feedback.routes";
 
 // ✅ import the new Socket.IO setup function
 import { setupSocketServer } from "./socket";
@@ -57,6 +58,7 @@ app.use("/api/messages", messagesRoutes);
 app.use("/api/weather", weatherRoutes);
 app.use("/api/tasks", tasksRoutes);
 app.use("/api/groups", groupsRoutes);
+app.use("/feedback",feedbackRoutes);
 app.use("/api/join-requests", joinRequestsRoutes);
 app.use((req, res, next) => {
   const start = Date.now();
